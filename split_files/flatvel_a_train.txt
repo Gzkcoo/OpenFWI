@@ -1,0 +1,10 @@
+.\FWIOpenData\FlatVel_A\data\data1.npy	.\FWIOpenData\FlatVel_A\model\model1.npy
+.\FWIOpenData\FlatVel_A\data\data2.npy	.\FWIOpenData\FlatVel_A\model\model2.npy
+.\FWIOpenData\FlatVel_A\data\data3.npy	.\FWIOpenData\FlatVel_A\model\model3.npy
+.\FWIOpenData\FlatVel_A\data\data4.npy	.\FWIOpenData\FlatVel_A\model\model4.npy
+.\FWIOpenData\FlatVel_A\data\data5.npy	.\FWIOpenData\FlatVel_A\model\model5.npy
+.\FWIOpenData\FlatVel_A\data\data6.npy	.\FWIOpenData\FlatVel_A\model\model6.npy
+.\FWIOpenData\FlatVel_A\data\data7.npy	.\FWIOpenData\FlatVel_A\model\model7.npy
+.\FWIOpenData\FlatVel_A\data\data8.npy	.\FWIOpenData\FlatVel_A\model\model8.npy
+.\FWIOpenData\FlatVel_A\data\data9.npy	.\FWIOpenData\FlatVel_A\model\model9.npy
+.\FWIOpenData\FlatVel_A\data\data10.npy	.\FWIOpenData\FlatVel_A\model\model10.npy
