@@ -312,6 +312,7 @@ class Deconv_HPGNN(nn.Module):
     def forward(self, x):
         return self.layers(x)
 
+# 全连接神经网络
 class Trunk_Net(nn.Module):
     def __init__(self, layer_sizes):
         super(Trunk_Net,self).__init__()
@@ -335,7 +336,7 @@ class Trunk_Net(nn.Module):
 
 
 
-
+# 不连续神经网络
 class Trunk_Net_Discon(nn.Module):
     def __init__(self, layer_sizes, eps_num):
         super(Trunk_Net_Discon, self).__init__()
@@ -377,6 +378,20 @@ class Trunk_Net_Discon(nn.Module):
 
 
 # DeLU
+
+class DeLU(nn.Module):
+    def __init__(self, layer_sizes, bias_sizes):
+        super(DeLU, self).__init__()
+        self.fcl_net = Fcl_Net(layer_sizes, False)  # false为最后一层不加bias
+        self.bias_net = Bias_Net(bias_sizes)
+
+
+    def forward(self, x):
+        X = x
+        H1, R = self.fcl_net(X)
+        H2 = self.bias_net(R)
+        return H1 + H2
+
 class Fcl_Net(nn.Module):
     def __init__(self, layer_sizes, is_last_bias):
         super(Fcl_Net,self).__init__()
@@ -404,7 +419,6 @@ class Fcl_Net(nn.Module):
         return H, R
 
 
-
 class Bias_Net(nn.Module):
     def __init__(self, bias_sizes):
         super(Bias_Net, self).__init__()
@@ -423,18 +437,7 @@ class Bias_Net(nn.Module):
         return H
 
 
-class DeLU(nn.Module):
-    def __init__(self, layer_sizes, bias_sizes):
-        super(DeLU, self).__init__()
-        self.fcl_net = Fcl_Net(layer_sizes, False)  # false为最后一层不加bias
-        self.bias_net = Bias_Net(bias_sizes)
 
-
-    def forward(self, x):
-        X = x
-        H1, R = self.fcl_net(X)
-        H2 = self.bias_net(R)
-        return H1 + H2
 
 # continuous network
 class Trunk_Net_Fcl(nn.Module):
