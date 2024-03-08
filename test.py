@@ -199,7 +199,7 @@ def parse_args():
 
     # Path related
     parser.add_argument('-ap', '--anno-path', default='split_files', help='annotation files location')
-    parser.add_argument('-v', '--val-anno', default='flatvel_a_val.txt', help='name of val anno')
+    parser.add_argument('-v', '--val-anno', default='flatvel_a_val_origin.txt', help='name of val anno')
     parser.add_argument('-o', '--output-path', default='Invnet_models', help='path to parent folder to save checkpoints')
     parser.add_argument('-n', '--save-name', default='fcn_l1loss_ffb', help='folder name for this experiment')
     parser.add_argument('-s', '--suffix', type=str, default=None, help='subfolder name for this run')
