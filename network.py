@@ -484,8 +484,8 @@ class FWIDeeponet(nn.Module):
         y = ym.reshape(-1, 1)
         self.xy_coordinate = torch.torch.cat([x, y], dim=1).float().to('cuda')  # (4900, 2)
 
-        layer_sizes = [2, 256, 256, 256, 128, 128, 256, 512]
-        self.trunk = Trunk_Net_Discon(layer_sizes, 128)    # 不连续神经网络
+        layer_sizes = [2, 256, 256, 256, 256, 256, 256, 512]
+        self.trunk = Trunk_Net_Discon(layer_sizes, 256)    # 不连续神经网络
 
         # layer_sizes = [2, 256, 256, 512, 512]
         # bias_sizes = [512, 512, 512]
@@ -558,15 +558,15 @@ class FWIEnDeepOnet(nn.Module):
         y = ym.reshape(-1, 1)
         self.xy_coordinate = torch.torch.cat([x, y], dim=1).float().to('cuda')  # (4900, 2)
 
-        layer_sizes = [2, 256, 256, 256, 32, 32, 256, 512]
-        self.trunk = Trunk_Net_Discon(layer_sizes, 32)  # 不连续神经网络
+        # layer_sizes = [2, 256, 256, 256, 32, 32, 256, 512]
+        # self.trunk = Trunk_Net_Discon(layer_sizes, 32)  # 不连续神经网络
 
         # layer_sizes = [2, 256, 256, 512, 512]
         # bias_sizes = [512, 512, 512]
         # self.trunk = DeLU(layer_sizes, bias_sizes)   # DeLU
 
-        # layer_sizes = [2, 256, 256, 512, 512]
-        # self.trunk = Trunk_Net_Fcl(layer_sizes)       # 全连接神经网络
+        layer_sizes = [2, 256, 256, 256, 512, 512]
+        self.trunk = Trunk_Net_Fcl(layer_sizes)       # 全连接神经网络
 
         # RootNet
         self.add_net = nn.Linear(512, 1, bias=False)
