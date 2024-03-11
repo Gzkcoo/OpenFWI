@@ -569,16 +569,13 @@ class FWIEnDeepOnet(nn.Module):
         # self.trunk = Trunk_Net_Fcl(layer_sizes)       # 全连接神经网络
 
         # RootNet
-        self.add_net = nn.Linear(512, 1)
-        self.substract_net = nn.Linear(512, 1)
-        self.multiply_net = nn.Linear(512, 1)
+        self.add_net = nn.Linear(512, 1, bias=False)
+        self.substract_net = nn.Linear(512, 1, bias=False)
+        self.multiply_net = nn.Linear(512, 1, bias=False)
 
         nn.init.xavier_normal_(self.add_net.weight, gain=1)
-        nn.init.constant_(self.add_net.bias, 0.)
         nn.init.xavier_normal_(self.substract_net.weight, gain=1)
-        nn.init.constant_(self.substract_net.bias, 0.)
         nn.init.xavier_normal_(self.multiply_net.weight, gain=1)
-        nn.init.constant_(self.multiply_net.bias, 0.)
 
 
 

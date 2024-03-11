@@ -298,7 +298,7 @@ def parse_args():
     parser.add_argument('-st', '--sample-temporal', type=int, default=1, help='temporal sampling ratio')
     # Training related
     parser.add_argument('-b', '--batch-size', default=128, type=int)
-    parser.add_argument('--lr', default=0.0001, type=float, help='initial learning rate')
+    parser.add_argument('--lr', default=0.001, type=float, help='initial learning rate')
     parser.add_argument('-lm', '--lr-milestones', nargs='+', default=[], type=int, help='decrease lr on milestones')
     parser.add_argument('--momentum', default=0.9, type=float, help='momentum')
     parser.add_argument('--weight-decay', default=1e-4, type=float, help='weight decay (default: 1e-4)')
