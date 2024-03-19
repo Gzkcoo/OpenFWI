@@ -17,7 +17,21 @@ def plot_velocity(output, target, path, vmin=None, vmax=None):
     ax[0].set_title('Prediction', y=1.08)
     ax[1].matshow(target, cmap=rainbow_cmap, vmin=vmin, vmax=vmax)
     ax[1].set_title('Ground Truth', y=1.08)
-    
+
+    # ax[0].set_xticks(range(0, 350, 50))
+    # ax[0].set_xticklabels(range(0, 700, 100))
+    # ax[0].set_yticks(range(0, 350, 50))
+    # ax[0].set_yticklabels(range(0, 700, 100))
+    # ax[0].set_ylabel('Depth (m)', fontsize=12)
+    # ax[0].set_xlabel('Offset (m)', fontsize=12)
+    #
+    # ax[1].set_xticks(range(0, 70, 10))
+    # ax[1].set_xticklabels(range(0, 700, 100))
+    # ax[1].set_yticks(range(0, 70, 10))
+    # ax[1].set_yticklabels(range(0, 700, 100))
+    # ax[1].set_ylabel('Depth (m)', fontsize=12)
+    # ax[1].set_xlabel('Offset (m)', fontsize=12)
+
     for axis in ax:
         # axis.set_xticks(range(0, 70, 10))
         # axis.set_xticklabels(range(0, 1050, 150))
@@ -27,7 +41,6 @@ def plot_velocity(output, target, path, vmin=None, vmax=None):
         axis.set_xticklabels(range(0, 700, 100))
         axis.set_yticks(range(0, 70, 10))
         axis.set_yticklabels(range(0, 700, 100))
-
         axis.set_ylabel('Depth (m)', fontsize=12)
         axis.set_xlabel('Offset (m)', fontsize=12)
 

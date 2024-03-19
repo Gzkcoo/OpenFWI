@@ -367,7 +367,7 @@ class Trunk_Net_Discon(nn.Module):
         H = self.activation(self.Wz[0](H))
         H = self.activation(self.Wz[1](H))
         H = self.activation(self.Wz[2](H))
-        H = self.activation(self.Wz[3](H)) + self.epsilon1 * torch.heaviside(self.Wz[3](H), values=self.values)
+        H = self.activation(self.Wz[3](H)) + self.epsilon2 * torch.heaviside(self.Wz[3](H), values=self.values)
         H = self.activation(self.Wz[4](H)) + self.epsilon2 * torch.heaviside(self.Wz[4](H), values=self.values)
         H = self.activation(self.Wz[5](H))
         H = self.Wz[6](H)
@@ -476,16 +476,21 @@ class FWIDeeponet(nn.Module):
         self.convblock7_2 = ConvBlock(dim4, dim4)
         self.convblock8 = ConvBlock(dim4, dim5, kernel_size=(8, ceil(70 * sample_spatial / 8)), padding=0)
 
+        self.length = length
+        self.deepth = deepth
+
         # Coordinate
         xc = torch.arange(1, deepth+1)
         yc = torch.arange(1, length+1)
         xm, ym = torch.meshgrid(xc, yc)
         x = xm.reshape(-1, 1)
         y = ym.reshape(-1, 1)
-        self.xy_coordinate = torch.torch.cat([x, y], dim=1).float().to('cuda')  # (4900, 2)
+        self.xy_coordinate = torch.torch.cat([y, x], dim=1).float()  # (4900, 2)
+        self.xy_coordinate = self.xy_coordinate / length  # 输入转换为（0，1）之间
+        self.xy_coordinate = self.xy_coordinate.to('cuda')
 
-        layer_sizes = [2, 256, 256, 256, 256, 256, 256, 512]
-        self.trunk = Trunk_Net_Discon(layer_sizes, 256)    # 不连续神经网络
+        layer_sizes = [2, 64, 128, 256, 64, 64, 256, 512]
+        self.trunk = Trunk_Net_Discon(layer_sizes, 64)    # 不连续神经网络
 
         # layer_sizes = [2, 256, 256, 512, 512]
         # bias_sizes = [512, 512, 512]
@@ -493,6 +498,11 @@ class FWIDeeponet(nn.Module):
 
         # layer_sizes = [2, 256, 256, 512, 512]
         # self.trunk = Trunk_Net_Fcl(layer_sizes)       # 全连接神经网络
+
+
+        # self.last_layer = nn.Linear(512, 1)
+        # nn.init.xavier_normal_(self.last_layer.weight, gain=1)
+        # nn.init.constant_(self.last_layer.bias, 0.)
 
 
 
@@ -519,14 +529,18 @@ class FWIDeeponet(nn.Module):
 
         # Multiplication
         x = torch.squeeze(x)  # (None, 512)
+
         # x = x.unsqueeze(1)  # (None, 1, 512)
         # x = x.repeat(1, 4900, 1)  # (None, 4900, 512)
         # x = x * t_out  # (None, 4900, 512)
+        # x = self.last_layer(x)  # (None, 4900, 1)
+
         # x = torch.sum(x, dim=2)  # (None, 4900)
+
         x = torch.einsum('bi,li->bl', x, t_out)
-        x = x.reshape((-1, 1, 70, 70))  # (None, 1, 70, 70)
+        x = x.reshape((-1, 1, self.deepth, self.length))  # (None, 1, 70, 70)
         # 图像转置
-        # x = torch.transpose(x, 2, 3)
+        x = torch.transpose(x, 2, 3)
 
 
         return x
@@ -556,7 +570,9 @@ class FWIEnDeepOnet(nn.Module):
         xm, ym = torch.meshgrid(xc, yc)
         x = xm.reshape(-1, 1)
         y = ym.reshape(-1, 1)
-        self.xy_coordinate = torch.torch.cat([x, y], dim=1).float().to('cuda')  # (4900, 2)
+        self.xy_coordinate = torch.torch.cat([x, y], dim=1).float()  # (4900, 2)
+        self.xy_coordinate = self.xy_coordinate / length   # 输入转换为（0，1）之间
+        self.xy_coordinate = self.xy_coordinate.to('cuda')
 
         # layer_sizes = [2, 256, 256, 256, 32, 32, 256, 512]
         # self.trunk = Trunk_Net_Discon(layer_sizes, 32)  # 不连续神经网络
@@ -622,12 +638,100 @@ class FWIEnDeepOnet(nn.Module):
 
         return x
 
+# deeponet两个输出
+class DDeeponet(nn.Module):
+    def __init__(self, dim1=32, dim2=64, dim3=128, dim4=256, dim5=512, deepth=70, length=70, sample_spatial=1.0, **kwargs):
+        super(DDeeponet, self).__init__()
+        self.convblock1 = ConvBlock(5, dim1, kernel_size=(7, 1), stride=(2, 1), padding=(3, 0))
+        self.convblock2_1 = ConvBlock(dim1, dim2, kernel_size=(3, 1), stride=(2, 1), padding=(1, 0))
+        self.convblock2_2 = ConvBlock(dim2, dim2, kernel_size=(3, 1), padding=(1, 0))
+        self.convblock3_1 = ConvBlock(dim2, dim2, kernel_size=(3, 1), stride=(2, 1), padding=(1, 0))
+        self.convblock3_2 = ConvBlock(dim2, dim2, kernel_size=(3, 1), padding=(1, 0))
+        self.convblock4_1 = ConvBlock(dim2, dim3, kernel_size=(3, 1), stride=(2, 1), padding=(1, 0))
+        self.convblock4_2 = ConvBlock(dim3, dim3, kernel_size=(3, 1), padding=(1, 0))
+        self.convblock5_1 = ConvBlock(dim3, dim3, stride=2)
+        self.convblock5_2 = ConvBlock(dim3, dim3)
+        self.convblock6_1 = ConvBlock(dim3, dim4, stride=2)
+        self.convblock6_2 = ConvBlock(dim4, dim4)
+        self.convblock7_1 = ConvBlock(dim4, dim4, stride=2)
+        self.convblock7_2 = ConvBlock(dim4, dim4)
+        self.convblock8 = ConvBlock(dim4, dim5, kernel_size=(8, ceil(70 * sample_spatial / 8)), padding=0)
+
+        # Coordinate
+        xc = torch.arange(1, deepth+1)
+        yc = torch.arange(1, length+1)
+        xm, ym = torch.meshgrid(xc, yc)
+        x = xm.reshape(-1, 1)
+        y = ym.reshape(-1, 1)
+        self.xy_coordinate = torch.torch.cat([x, y], dim=1).float()  # (4900, 2)
+        self.xy_coordinate = self.xy_coordinate / 70  # 输入转换为（0，1）之间
+        self.xy_coordinate = self.xy_coordinate.to('cuda')
+
+        layer_sizes = [2, 256, 256, 256, 128, 128, 256, 512]
+        self.trunk = Trunk_Net_Discon(layer_sizes, 128)    # 不连续神经网络
+
+        # layer_sizes = [2, 256, 256, 512, 512]
+        # bias_sizes = [512, 512, 512]
+        # self.trunk = DeLU(layer_sizes, bias_sizes)   # DeLU
+
+        # layer_sizes = [2, 256, 256, 512, 512]
+        # self.trunk = Trunk_Net_Fcl(layer_sizes)       # 全连接神经网络
+
+
+        # 全连接层
+        self.layer1 = nn.Linear(512, 1, bias=False)
+        self.layer2 = nn.Linear(512, 2, bias=False)
+
+
+
+
+    def forward(self, x):
+        # Branch net
+        x = self.convblock1(x)  # (None, 32, 500, 70)
+        x = self.convblock2_1(x)  # (None, 64, 250, 70)
+        x = self.convblock2_2(x)  # (None, 64, 250, 70)
+        x = self.convblock3_1(x)  # (None, 64, 125, 70)
+        x = self.convblock3_2(x)  # (None, 64, 125, 70)
+        x = self.convblock4_1(x)  # (None, 128, 63, 70)
+        x = self.convblock4_2(x)  # (None, 128, 63, 70)
+        x = self.convblock5_1(x)  # (None, 128, 32, 35)
+        x = self.convblock5_2(x)  # (None, 128, 32, 35)
+        x = self.convblock6_1(x)  # (None, 256, 16, 18)
+        x = self.convblock6_2(x)  # (None, 256, 16, 18)
+        x = self.convblock7_1(x)  # (None, 256, 8, 9)
+        x = self.convblock7_2(x)  # (None, 256, 8, 9)
+        x = self.convblock8(x)  # (None, 512, 1, 1)
+
+        # Trunk net
+        t_out = self.trunk(self.xy_coordinate)  # (4900, 512)
+
+        # Multiplication
+        x = torch.squeeze(x)  # (None, 512)
+        x = x.unsqueeze(1)  # (None, 1, 512)
+        x = x.repeat(1, 4900, 1)  # (None, 4900, 512)
+        x = x * t_out  # (None, 4900, 512)
+
+        x1 = self.layer1(x)  # 期望输出真实的速度图  (None, 4900, 1)
+        x2 = self.layer2(x)  # 输出轮廓  (None, 4900, 2)
+
+        x1 = x1.reshape((-1, 1, 70, 70))  # (None, 1, 70, 70)
+        x2 = x2.reshape((-1, 2))  # (None, 2)
+
+        # 图像转置
+        # x1 = torch.transpose(x1, 2, 3)
+        # x2 = torch.transpose(x2, 2, 3)
+
+        return x1, x2
+
+
+
 
 model_dict = {
     'InversionNet': InversionNet,
     'Discriminator': Discriminator,
     'UPFWI': FCN4_Deep_Resize_2,
     'FWIDeeponet': FWIDeeponet,
-    'FWIEnDeepOnet': FWIEnDeepOnet
+    'FWIEnDeepOnet': FWIEnDeepOnet,
+    'DDeeponet': DDeeponet
 }
 

@@ -6,6 +6,8 @@ import json
 import torch
 from tqdm import tqdm
 import matplotlib.pyplot as plt
+import cv2
+from PIL import Image
 
 from torch import nn
 from torch.utils.data import RandomSampler, DataLoader, TensorDataset
@@ -288,6 +290,7 @@ dataset_train = FWIDataset(
 #     file_size=ctx['file_size']
 # )
 
+
 data_train, data_label = dataset_train[6]   # 测试第一张velocity图
 data_label = torch.tensor(data_label).reshape(-1, 1)  # (4900,1)
 
@@ -300,7 +303,7 @@ y = ym.reshape(-1, 1)
 xy_coordinate = torch.torch.cat([x, y], dim=1).float()  # (4900, 2)
 
 # 设置超参数
-epochs = 500
+epochs = 50
 learning_rate = 1e-3
 batch_size = 256
 lambda_g1v = 1
@@ -312,10 +315,10 @@ layer_sizes = [2, 256, 512, 256, 1]
 l1loss = nn.L1Loss()
 l2loss = nn.MSELoss()
 
-#model = Trunk_Net_Discon().to(device)  # 不连续神经网络
+model = Trunk_Net_Discon().to(device)  # 不连续神经网络
 #model = Trunk_Net_Fcl(layer_sizes).to(device)  # 全连接神经网络
 #model = DeLU(layer_sizes).to(device)
-model = MyNet(layer_sizes).to(device)
+# model = MyNet(layer_sizes).to(device)
 dataLoader = DataLoader(TensorDataset(xy_coordinate, data_label), batch_size=batch_size, shuffle=True)
 optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate, betas=(0.9, 0.999), weight_decay=1e-4)
 
@@ -336,13 +339,44 @@ for i in range(1, epochs + 1):
     print('epoch[' + str(i) + '] loss:' + str(loss.item()) + ' L1loss:' + str(loss_g1v.item()) + ' L2loss:' + str(loss_g2v.item()))
 
 
+def extract_contours(para_image):
+    '''
+    Use Canny to extract contour features
+
+    :param image:       Velocity model (numpy)
+    :return:            Binary contour structure of the velocity model (numpy)
+    '''
+
+    image = para_image
+
+    norm_image = cv2.normalize(image, None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
+    norm_image_to_255 = norm_image * 255
+    norm_image_to_255 = norm_image_to_255.astype(np.uint8)
+    canny = cv2.Canny(norm_image_to_255, 10, 15)
+    bool_canny = np.clip(canny, 0, 1)
+    return bool_canny
+
 # Visualization
 utils.mkdir('output')
 with torch.no_grad():
     pred = model(xy_coordinate.to(device)).cpu()
-    label_np = T.tonumpy_denormalize(data_label, ctx['label_min'], ctx['label_max'], exp=False).reshape(70, 70)
-    pred_np = T.tonumpy_denormalize(pred, ctx['label_min'], ctx['label_max'], exp=False).reshape(70, 70)
+    # label_np = T.tonumpy_denormalize(data_label, ctx['label_min'], ctx['label_max'], exp=False).reshape(70, 70)
+    # pred_np = T.tonumpy_denormalize(pred, ctx['label_min'], ctx['label_max'], exp=False).reshape(70, 70)
+    pred_np = pred.numpy().reshape(70, 70)
+    label_np = data_label.numpy().reshape(70, 70)
     plot_velocity(pred_np, label_np, f'./output/vis.png')
+
+print('--------------------pred_np-------------------')
+print(pred_np)
+print('--------------------con_pred-------------------')
+con_pred = extract_contours(pred_np) * 255
+con_label = extract_contours(label_np) * 255
+print(con_pred)
+
+img1 = Image.fromarray(con_pred)
+img2 = Image.fromarray(con_label)
+img1.show()
+img2.show()
 
 
 fig_1 = plt.figure(1)

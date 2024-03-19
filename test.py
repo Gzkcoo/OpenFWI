@@ -72,7 +72,7 @@ def evaluate(model, criterions, dataloader, device, k, ctx,
                 data_noise_list.append(data_noise_np)
                 pred = model(data_noise)
             else:
-                pred = model(data)
+                pred, _ = model(data)
 
             label_pred_np = T.tonumpy_denormalize(pred, ctx['label_min'], ctx['label_max'], exp=False)
             label_pred_list.append(label_pred_np)
@@ -205,7 +205,7 @@ def parse_args():
     parser.add_argument('-s', '--suffix', type=str, default=None, help='subfolder name for this run')
 
     # Model related
-    parser.add_argument('-m', '--model', default='FWIDeeponet', type=str, help='inverse model name')
+    parser.add_argument('-m', '--model', default='DDeeponet', type=str, help='inverse model name')
     parser.add_argument('-no', '--norm', default='bn', help='normalization layer type, support bn, in, ln (default: bn)')
     parser.add_argument('-um', '--up-mode', default=None, help='upsampling layer mode such as "nearest", "bicubic", etc.')
     parser.add_argument('-ss', '--sample-spatial', type=float, default=1.0, help='spatial sampling ratio')
@@ -213,7 +213,7 @@ def parse_args():
 
     # Test related
     parser.add_argument('-b', '--batch-size', default=128, type=int)
-    parser.add_argument('-j', '--workers', default=4, type=int, help='number of data loading workers (default: 16)')
+    parser.add_argument('-j', '--workers', default=2, type=int, help='number of data loading workers (default: 16)')
     parser.add_argument('--k', default=1, type=float, help='k in log transformation')
     parser.add_argument('-r', '--resume', default='CHECKPOINT.PTH', help='resume from checkpoint')
     parser.add_argument('--vis', help='visualization option', action="store_false")

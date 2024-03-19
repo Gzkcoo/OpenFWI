@@ -29,6 +29,7 @@ import os
 import itertools
 from torchvision.models import vgg16
 import numpy as np
+import cv2
 
 class SmoothedValue(object):
     """Track a series of values and provide access to smoothed values over a
@@ -472,3 +473,22 @@ def cal_psnr(gt, data, max_value):
     if (mse == 0):
        return 100
     return 20 * np.log10(max_value / np.sqrt(mse))
+
+
+def extract_contours(para_image):
+    '''
+    Use Canny to extract contour features
+
+    :param image:       Velocity model (numpy)
+    :return:            Binary contour structure of the velocity model (numpy)
+    '''
+
+
+    image = para_image.detach().numpy()
+
+    norm_image = cv2.normalize(image, None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
+    norm_image_to_255 = norm_image * 255
+    norm_image_to_255 = norm_image_to_255.astype(np.uint8)
+    canny = cv2.Canny(norm_image_to_255, 10, 15)
+    bool_canny = np.clip(canny, 0, 1)
+    return bool_canny

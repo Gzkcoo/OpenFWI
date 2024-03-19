@@ -203,9 +203,11 @@ def main(args):
     # Define loss function
     l1loss = nn.L1Loss()   # MAE
     l2loss = nn.MSELoss()  # MSE
+
     def criterion(pred, gt):
         loss_g1v = l1loss(pred, gt)
         loss_g2v = l2loss(pred, gt)
+
         loss = args.lambda_g1v * loss_g1v + args.lambda_g2v * loss_g2v
         return loss, loss_g1v, loss_g2v
 
@@ -292,20 +294,20 @@ def parse_args():
     parser.add_argument('-s', '--suffix', type=str, default=None, help='subfolder name for this run')
 
     # Model related
-    parser.add_argument('-m', '--model', default='FWIEnDeepOnet', type=str, help='inverse model name')
+    parser.add_argument('-m', '--model', default='InversionNet', type=str, help='inverse model name')
     parser.add_argument('-um', '--up-mode', default=None, help='upsampling layer mode such as "nearest", "bicubic", etc.')
     parser.add_argument('-ss', '--sample-spatial', type=float, default=1.0, help='spatial sampling ratio')
     parser.add_argument('-st', '--sample-temporal', type=int, default=1, help='temporal sampling ratio')
     # Training related
-    parser.add_argument('-b', '--batch-size', default=128, type=int)
-    parser.add_argument('--lr', default=0.001, type=float, help='initial learning rate')
+    parser.add_argument('-b', '--batch-size', default=64, type=int)
+    parser.add_argument('--lr', default=0.0001, type=float, help='initial learning rate')
     parser.add_argument('-lm', '--lr-milestones', nargs='+', default=[], type=int, help='decrease lr on milestones')
     parser.add_argument('--momentum', default=0.9, type=float, help='momentum')
     parser.add_argument('--weight-decay', default=1e-4, type=float, help='weight decay (default: 1e-4)')
     parser.add_argument('--lr-gamma', default=0.1, type=float, help='decrease lr by a factor of lr-gamma')
     parser.add_argument('--lr-warmup-epochs', default=0, type=int, help='number of warmup epochs')   
     parser.add_argument('-eb', '--epoch_block', type=int, default=40, help='epochs in a saved block')
-    parser.add_argument('-nb', '--num_block', type=int, default=5, help='number of saved block')
+    parser.add_argument('-nb', '--num_block', type=int, default=3, help='number of saved block')
     parser.add_argument('-j', '--workers', default=1, type=int, help='number of data loading workers (default: 16)')
     parser.add_argument('--k', default=1, type=float, help='k in log transformation')
     parser.add_argument('--print-freq', default=50, type=int, help='print frequency')
