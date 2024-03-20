@@ -489,7 +489,7 @@ class FWIDeeponet(nn.Module):
         self.xy_coordinate = self.xy_coordinate / length  # 输入转换为（0，1）之间
         self.xy_coordinate = self.xy_coordinate.to('cuda')
 
-        layer_sizes = [2, 64, 128, 256, 64, 64, 256, 512]
+        layer_sizes = [2, 256, 256, 256, 64, 64, 256, 512]
         self.trunk = Trunk_Net_Discon(layer_sizes, 64)    # 不连续神经网络
 
         # layer_sizes = [2, 256, 256, 512, 512]
