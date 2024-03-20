@@ -367,7 +367,7 @@ class Trunk_Net_Discon(nn.Module):
         H = self.activation(self.Wz[0](H))
         H = self.activation(self.Wz[1](H))
         H = self.activation(self.Wz[2](H))
-        H = self.activation(self.Wz[3](H)) + self.epsilon2 * torch.heaviside(self.Wz[3](H), values=self.values)
+        H = self.activation(self.Wz[3](H)) + self.epsilon1 * torch.heaviside(self.Wz[3](H), values=self.values)
         H = self.activation(self.Wz[4](H)) + self.epsilon2 * torch.heaviside(self.Wz[4](H), values=self.values)
         H = self.activation(self.Wz[5](H))
         H = self.Wz[6](H)
