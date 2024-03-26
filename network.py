@@ -378,7 +378,6 @@ class Trunk_Net_Discon(nn.Module):
 
 
 # DeLU
-
 class DeLU(nn.Module):
     def __init__(self, layer_sizes, bias_sizes):
         super(DeLU, self).__init__()
@@ -418,7 +417,6 @@ class Fcl_Net(nn.Module):
         H = self.Wz[-1](H)
         return H, R
 
-
 class Bias_Net(nn.Module):
     def __init__(self, bias_sizes):
         super(Bias_Net, self).__init__()
@@ -440,9 +438,9 @@ class Bias_Net(nn.Module):
 
 
 # continuous network
-class Trunk_Net_Fcl(nn.Module):
+class Smooth_Net(nn.Module):
     def __init__(self, layer_sizes):
-        super(Trunk_Net_Fcl, self).__init__()
+        super(Smooth_Net, self).__init__()
         self.Wz = nn.ModuleList()
         for i in range(len(layer_sizes) - 1):
             m = nn.Linear(layer_sizes[i], layer_sizes[i + 1])
@@ -457,6 +455,8 @@ class Trunk_Net_Fcl(nn.Module):
             H = torch.relu(linear(H))
         H = self.Wz[-1](H)
         return H
+
+
 
 class FWIDeeponet(nn.Module):
     def __init__(self, dim1=32, dim2=64, dim3=128, dim4=256, dim5=512, deepth=70, length=70, sample_spatial=1.0, **kwargs):
@@ -489,8 +489,8 @@ class FWIDeeponet(nn.Module):
         self.xy_coordinate = self.xy_coordinate / length  # 输入转换为（0，1）之间
         self.xy_coordinate = self.xy_coordinate.to('cuda')
 
-        layer_sizes = [2, 256, 256, 256, 64, 64, 256, 512]
-        self.trunk = Trunk_Net_Discon(layer_sizes, 64)    # 不连续神经网络
+        layer_sizes = [2, 256, 256, 256, 128, 128, 256, 512]
+        self.trunk = Trunk_Net_Discon(layer_sizes, 128)    # 不连续神经网络
 
         # layer_sizes = [2, 256, 256, 512, 512]
         # bias_sizes = [512, 512, 512]
@@ -546,6 +546,65 @@ class FWIDeeponet(nn.Module):
         return x
 
 
+
+class InversionNet_Encoder(nn.Module):
+    def __init__(self, dim1=32, dim2=64, dim3=128, dim4=256, dim5=512, sample_spatial=1.0, **kwargs):
+        super(InversionNet_Encoder, self).__init__()
+        self.convblock1 = ConvBlock(5, dim1, kernel_size=(7, 1), stride=(2, 1), padding=(3, 0))
+        self.convblock2_1 = ConvBlock(dim1, dim2, kernel_size=(3, 1), stride=(2, 1), padding=(1, 0))
+        self.convblock2_2 = ConvBlock(dim2, dim2, kernel_size=(3, 1), padding=(1, 0))
+        self.convblock3_1 = ConvBlock(dim2, dim2, kernel_size=(3, 1), stride=(2, 1), padding=(1, 0))
+        self.convblock3_2 = ConvBlock(dim2, dim2, kernel_size=(3, 1), padding=(1, 0))
+        self.convblock4_1 = ConvBlock(dim2, dim3, kernel_size=(3, 1), stride=(2, 1), padding=(1, 0))
+        self.convblock4_2 = ConvBlock(dim3, dim3, kernel_size=(3, 1), padding=(1, 0))
+        self.convblock5_1 = ConvBlock(dim3, dim3, stride=2)
+        self.convblock5_2 = ConvBlock(dim3, dim3)
+        self.convblock6_1 = ConvBlock(dim3, dim4, stride=2)
+        self.convblock6_2 = ConvBlock(dim4, dim4)
+        self.convblock7_1 = ConvBlock(dim4, dim4, stride=2)
+        self.convblock7_2 = ConvBlock(dim4, dim4)
+        self.convblock8 = ConvBlock(dim4, dim5, kernel_size=(8, ceil(70 * sample_spatial / 8)), padding=0)
+
+    def forward(self, x):
+        # Encoder Part
+        x = self.convblock1(x)  # (None, 32, 500, 70)
+        x = self.convblock2_1(x)  # (None, 64, 250, 70)
+        x = self.convblock2_2(x)  # (None, 64, 250, 70)
+        x = self.convblock3_1(x)  # (None, 64, 125, 70)
+        x = self.convblock3_2(x)  # (None, 64, 125, 70)
+        x = self.convblock4_1(x)  # (None, 128, 63, 70)
+        x = self.convblock4_2(x)  # (None, 128, 63, 70)
+        x = self.convblock5_1(x)  # (None, 128, 32, 35)
+        x = self.convblock5_2(x)  # (None, 128, 32, 35)
+        x = self.convblock6_1(x)  # (None, 256, 16, 18)
+        x = self.convblock6_2(x)  # (None, 256, 16, 18)
+        x = self.convblock7_1(x)  # (None, 256, 8, 9)
+        x = self.convblock7_2(x)  # (None, 256, 8, 9)
+        x = self.convblock8(x)  # (None, 512, 1, 1)
+        x = x.squeeze()  # (None, 512)
+        return x
+
+class DeepONet(nn.Module):
+    def __init__(self):
+        super(DeepONet, self).__init__()
+
+        self.layer_sizes_t = [2, 256, 256, 256, 64, 64, 256, 512]
+
+        self.branch1 = InversionNet_Encoder()
+
+        self.trunk = Smooth_Net(self.layer_sizes_t)
+
+        self.b = nn.parameter(torch.zeros(1))
+
+    def forward(self, x1, lxy):
+        x = self.branch1(x1)
+        l = self.trunk(lxy)
+
+        res = torch.einsum("bi,bki->bk", x, l)
+        res = res.unsqueeze(-1) + self.b
+        return res
+
+
 class FWIEnDeepOnet(nn.Module):
     def __init__(self, dim1=32, dim2=64, dim3=128, dim4=256, dim5=512, deepth=70, length=70, sample_spatial=1.0, **kwargs):
         super(FWIEnDeepOnet, self).__init__()
@@ -582,7 +641,7 @@ class FWIEnDeepOnet(nn.Module):
         # self.trunk = DeLU(layer_sizes, bias_sizes)   # DeLU
 
         layer_sizes = [2, 256, 256, 256, 512, 512]
-        self.trunk = Trunk_Net_Fcl(layer_sizes)       # 全连接神经网络
+        self.trunk = Smooth_Net(layer_sizes)       # 全连接神经网络
 
         # RootNet
         self.add_net = nn.Linear(512, 1, bias=False)
