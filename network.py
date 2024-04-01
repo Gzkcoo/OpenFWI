@@ -489,7 +489,7 @@ class FWIDeeponet(nn.Module):
         self.xy_coordinate = self.xy_coordinate / length  # 输入转换为（0，1）之间
         self.xy_coordinate = self.xy_coordinate.to('cuda')
 
-        layer_sizes = [2, 256, 256, 256, 128, 128, 256, 512]
+        layer_sizes = [2, 256, 512, 512, 128, 128, 512, 512]
         self.trunk = Trunk_Net_Discon(layer_sizes, 128)    # 不连续神经网络
 
         # layer_sizes = [2, 256, 256, 512, 512]
@@ -585,16 +585,20 @@ class InversionNet_Encoder(nn.Module):
         return x
 
 class DeepONet(nn.Module):
-    def __init__(self):
+    def __init__(self, dim1=32, dim2=64, dim3=128, dim4=256, dim5=512, sample_spatial=1.0, **kwargs):
         super(DeepONet, self).__init__()
 
-        self.layer_sizes_t = [2, 256, 256, 256, 64, 64, 256, 512]
+        self.layer_sizes_t = [2, 256, 256, 256, 128, 128, 256, 512]
 
-        self.branch1 = InversionNet_Encoder()
+        self.branch1 = InversionNet_Encoder(dim1=dim1, dim2=dim2, dim3=dim3, dim4=dim4, dim5=dim5, sample_spatial=sample_spatial)
 
-        self.trunk = Smooth_Net(self.layer_sizes_t)
+        # 全连接神经网络
+        # self.trunk = Smooth_Net(self.layer_sizes_t)
 
-        self.b = nn.parameter(torch.zeros(1))
+        #不连续神经网络
+        self.trunk = Trunk_Net_Discon(self.layer_sizes_t, 128)
+
+        self.b = nn.Parameter(torch.zeros(1))
 
     def forward(self, x1, lxy):
         x = self.branch1(x1)
@@ -791,6 +795,7 @@ model_dict = {
     'UPFWI': FCN4_Deep_Resize_2,
     'FWIDeeponet': FWIDeeponet,
     'FWIEnDeepOnet': FWIEnDeepOnet,
-    'DDeeponet': DDeeponet
+    'DDeeponet': DDeeponet,
+    'DeepONet': DeepONet
 }
 
