@@ -256,7 +256,6 @@ class FCN4_Deep_Resize_2(nn.Module):
         x = self.deconv6(x) # (None, 1, 70, 70)
         return x
 
-
 class Discriminator(nn.Module):
     def __init__(self, dim1=32, dim2=64, dim3=128, dim4=256, **kwargs):
         super(Discriminator, self).__init__()
@@ -283,7 +282,6 @@ class Discriminator(nn.Module):
         x = x.view(x.shape[0], -1)
         return x
 
-
 class Conv_HPGNN(nn.Module):
     def __init__(self, in_fea, out_fea, kernel_size=None, stride=None, padding=None, **kwargs):
         super(Conv_HPGNN, self).__init__()
@@ -298,7 +296,6 @@ class Conv_HPGNN(nn.Module):
     def forward(self, x):
         return self.layers(x)
 
-
 class Deconv_HPGNN(nn.Module):
     def __init__(self, in_fea, out_fea, kernel_size, **kwargs):
         super(Deconv_HPGNN, self).__init__()
@@ -311,70 +308,6 @@ class Deconv_HPGNN(nn.Module):
 
     def forward(self, x):
         return self.layers(x)
-
-# 全连接神经网络
-class Trunk_Net(nn.Module):
-    def __init__(self, layer_sizes):
-        super(Trunk_Net,self).__init__()
-        self.values = torch.tensor([0.]).to('cuda')
-        self.Wz = nn.ModuleList()
-        for i in range(len(layer_sizes) - 1):
-            m = nn.Linear(layer_sizes[i], layer_sizes[i+1])
-            nn.init.xavier_normal_(m.weight, gain=1)
-            nn.init.constant_(m.bias, 0.)
-            self.Wz.append(m)
-
-
-    def forward(self, x):
-        X = x
-        H = torch.heaviside(self.Wz[0](X), values=self.values)
-        for linear in self.Wz[1:-1]:
-                H = torch.heaviside(linear(H), values=self.values)
-        H = self.Wz[-1](H)
-        return H
-
-
-
-
-# 不连续神经网络
-class Trunk_Net_Discon(nn.Module):
-    def __init__(self, layer_sizes, eps_num):
-        super(Trunk_Net_Discon, self).__init__()
-        self.values = torch.tensor([0.]).to('cuda')
-        self.Wz = nn.ModuleList()
-        self.eps_num = eps_num
-        self.activation = nn.LeakyReLU(0.2)
-        self.layer_sizes = layer_sizes
-        for i in range(len(layer_sizes) - 1):
-            m = nn.Linear(layer_sizes[i], layer_sizes[i+1])
-            nn.init.xavier_normal_(m.weight, gain=1)
-            nn.init.constant_(m.bias, 0.)
-            self.Wz.append(m)
-
-
-        # 连续激活函数 + epsilon * heaviside
-        # epsilon 是可学习的向量
-        self.epsilon1 = nn.Parameter(torch.randn(1, self.eps_num))
-        self.epsilon2 = nn.Parameter(torch.randn(1, self.eps_num))
-
-        nn.init.xavier_normal_(self.epsilon1, gain=1)
-        nn.init.xavier_normal_(self.epsilon2, gain=1)
-
-
-
-    def forward(self, x):
-        H = x
-        H = self.activation(self.Wz[0](H))
-        H = self.activation(self.Wz[1](H))
-        H = self.activation(self.Wz[2](H))
-        H = self.activation(self.Wz[3](H)) + self.epsilon1 * torch.heaviside(self.Wz[3](H), values=self.values)
-        H = self.activation(self.Wz[4](H)) + self.epsilon2 * torch.heaviside(self.Wz[4](H), values=self.values)
-        H = self.activation(self.Wz[5](H))
-        H = self.Wz[6](H)
-        return H
-
-
-
 
 
 # DeLU
@@ -436,7 +369,6 @@ class Bias_Net(nn.Module):
 
 
 
-
 # continuous network
 class Smooth_Net(nn.Module):
     def __init__(self, layer_sizes):
@@ -456,6 +388,48 @@ class Smooth_Net(nn.Module):
         H = self.Wz[-1](H)
         return H
 
+# 不连续神经网络
+class Trunk_Net_Discon(nn.Module):
+    def __init__(self, layer_sizes, eps_num):
+        super(Trunk_Net_Discon, self).__init__()
+        self.values = torch.tensor([0.]).to('cuda')
+        self.Wz = nn.ModuleList()
+        self.eps_num = eps_num
+        self.activation = nn.LeakyReLU(0.2)
+        self.layer_sizes = layer_sizes
+        for i in range(len(layer_sizes) - 1):
+            m = nn.Linear(layer_sizes[i], layer_sizes[i+1])
+            nn.init.xavier_normal_(m.weight, gain=1)
+            nn.init.constant_(m.bias, 0.)
+            self.Wz.append(m)
+
+        # self.epsilon1 = nn.Parameter(torch.ones(1))
+        # self.epsilon2 = nn.Parameter(torch.ones(1))
+
+        # 连续激活函数 + epsilon * heaviside
+        # epsilon 是可学习的向量
+        self.epsilon1 = nn.Parameter(torch.randn(1, self.eps_num))
+        self.epsilon11 = nn.Parameter(torch.randn(1, self.eps_num))
+        self.epsilon2 = nn.Parameter(torch.randn(1, self.eps_num))
+        self.epsilon22 = nn.Parameter(torch.randn(1, self.eps_num))
+
+        # nn.init.xavier_normal_(self.epsilon1, gain=1)
+        # nn.init.xavier_normal_(self.epsilon2, gain=1)
+
+
+
+    def forward(self, x):
+        H = x
+        H = self.activation(self.Wz[0](H))
+        H = self.activation(self.Wz[1](H))
+        H = self.activation(self.Wz[2](H))
+        H = self.epsilon11 * self.activation(self.Wz[3](H)) + self.epsilon1 * torch.heaviside(self.Wz[3](H), values=self.values)
+
+        H = self.epsilon22 * self.activation(self.Wz[4](H)) + self.epsilon2 * torch.heaviside(self.Wz[4](H), values=self.values)
+        H = self.activation(self.Wz[5](H))
+        H = self.Wz[6](H)
+
+        return H
 
 
 class FWIDeeponet(nn.Module):
@@ -479,6 +453,8 @@ class FWIDeeponet(nn.Module):
         self.length = length
         self.deepth = deepth
 
+        self.b = nn.Parameter(torch.zeros(1))
+
         # Coordinate
         xc = torch.arange(1, deepth+1)
         yc = torch.arange(1, length+1)
@@ -489,8 +465,8 @@ class FWIDeeponet(nn.Module):
         self.xy_coordinate = self.xy_coordinate / length  # 输入转换为（0，1）之间
         self.xy_coordinate = self.xy_coordinate.to('cuda')
 
-        layer_sizes = [2, 256, 512, 512, 128, 128, 512, 512]
-        self.trunk = Trunk_Net_Discon(layer_sizes, 128)    # 不连续神经网络
+        layer_sizes = [2, 256, 256, 256, 64, 64, 256, 512]
+        self.trunk = Trunk_Net_Discon(layer_sizes, 64)    # 不连续神经网络
 
         # layer_sizes = [2, 256, 256, 512, 512]
         # bias_sizes = [512, 512, 512]
@@ -499,10 +475,11 @@ class FWIDeeponet(nn.Module):
         # layer_sizes = [2, 256, 256, 512, 512]
         # self.trunk = Trunk_Net_Fcl(layer_sizes)       # 全连接神经网络
 
-
-        # self.last_layer = nn.Linear(512, 1)
+        #
+        # self.last_layer = nn.Linear(512, 128)
         # nn.init.xavier_normal_(self.last_layer.weight, gain=1)
         # nn.init.constant_(self.last_layer.bias, 0.)
+
 
 
 
@@ -524,11 +501,13 @@ class FWIDeeponet(nn.Module):
         x = self.convblock7_2(x)  # (None, 256, 8, 9)
         x = self.convblock8(x)  # (None, 512, 1, 1)
 
+        x = torch.squeeze(x)  # (None, 512)
+        # x = self.last_layer(x)  # (None, 128)
+
         # Trunk net
         t_out = self.trunk(self.xy_coordinate)  # (4900, 512)
 
         # Multiplication
-        x = torch.squeeze(x)  # (None, 512)
 
         # x = x.unsqueeze(1)  # (None, 1, 512)
         # x = x.repeat(1, 4900, 1)  # (None, 4900, 512)
@@ -538,10 +517,241 @@ class FWIDeeponet(nn.Module):
         # x = torch.sum(x, dim=2)  # (None, 4900)
 
         x = torch.einsum('bi,li->bl', x, t_out)
+        x = x.unsqueeze(-1) + self.b
         x = x.reshape((-1, 1, self.deepth, self.length))  # (None, 1, 70, 70)
         # 图像转置
         x = torch.transpose(x, 2, 3)
+        return x
 
+
+
+
+class FWIDeeponet2(nn.Module):
+    def __init__(self, dim1=32, dim2=64, dim3=128, dim4=256, dim5=512, deepth=70, length=70, sample_spatial=1.0, **kwargs):
+        super(FWIDeeponet2, self).__init__()
+        self.convblock1 = ConvBlock(5, dim1, kernel_size=(7, 1), stride=(2, 1), padding=(3, 0))
+        self.convblock2_1 = ConvBlock(dim1, dim2, kernel_size=(3, 1), stride=(2, 1), padding=(1, 0))
+        self.convblock2_2 = ConvBlock(dim2, dim2, kernel_size=(3, 1), padding=(1, 0))
+        self.convblock3_1 = ConvBlock(dim2, dim2, kernel_size=(3, 1), stride=(2, 1), padding=(1, 0))
+        self.convblock3_2 = ConvBlock(dim2, dim2, kernel_size=(3, 1), padding=(1, 0))
+        self.convblock4_1 = ConvBlock(dim2, dim3, kernel_size=(3, 1), stride=(2, 1), padding=(1, 0))
+        self.convblock4_2 = ConvBlock(dim3, dim3, kernel_size=(3, 1), padding=(1, 0))
+        self.convblock5_1 = ConvBlock(dim3, dim3, stride=2)
+        self.convblock5_2 = ConvBlock(dim3, dim3)
+        self.convblock6_1 = ConvBlock(dim3, dim4, stride=2)
+        self.convblock6_2 = ConvBlock(dim4, dim4)
+        self.convblock7_1 = ConvBlock(dim4, dim4, stride=2)
+        self.convblock7_2 = ConvBlock(dim4, dim4)
+        self.convblock8 = ConvBlock(dim4, dim5, kernel_size=(8, ceil(70 * sample_spatial / 8)), padding=0)
+
+        self.length = length
+        self.deepth = deepth
+
+        self.b = nn.Parameter(torch.zeros(1))
+
+        self.values = torch.tensor([0.]).to('cuda')
+
+        # Coordinate
+        xc = torch.arange(1, deepth+1)
+        yc = torch.arange(1, length+1)
+        xm, ym = torch.meshgrid(xc, yc)
+        x = xm.reshape(-1, 1)
+        y = ym.reshape(-1, 1)
+        self.xy_coordinate = torch.torch.cat([x, y], dim=1).float()  # (4900, 2)
+        self.xy_coordinate = self.xy_coordinate / length  # 输入转换为（0，1）之间
+        self.xy_coordinate = self.xy_coordinate.to('cuda')
+
+        layer_sizes = [2, 256, 256, 256, 64, 64, 256, 512]
+        self.trunk = Trunk_Net_Discon(layer_sizes, 64)    # 不连续神经网络
+
+        # layer_sizes = [2, 256, 256, 512, 512]
+        # bias_sizes = [512, 512, 512]
+        # self.trunk = DeLU(layer_sizes, bias_sizes)   # DeLU
+
+        # layer_sizes = [2, 256, 256, 512, 512]
+        # self.trunk = Trunk_Net_Fcl(layer_sizes)       # 全连接神经网络
+
+
+        # self.last_layer = nn.Linear(512, 128)
+        # nn.init.xavier_normal_(self.last_layer.weight, gain=1)
+        # nn.init.constant_(self.last_layer.bias, 0.)
+
+
+        # DeLU
+        self.de_layer1 = nn.Linear(2, 256)
+        self.de_layer2 = nn.Linear(256, 256)
+        self.de_layer3 = nn.Linear(256, 1)
+
+
+    def forward(self, x):
+        # Branch net
+        x = self.convblock1(x)  # (None, 32, 500, 70)
+        x = self.convblock2_1(x)  # (None, 64, 250, 70)
+        x = self.convblock2_2(x)  # (None, 64, 250, 70)
+        x = self.convblock3_1(x)  # (None, 64, 125, 70)
+        x = self.convblock3_2(x)  # (None, 64, 125, 70)
+        x = self.convblock4_1(x)  # (None, 128, 63, 70)
+        x = self.convblock4_2(x)  # (None, 128, 63, 70)
+        x = self.convblock5_1(x)  # (None, 128, 32, 35)
+        x = self.convblock5_2(x)  # (None, 128, 32, 35)
+        x = self.convblock6_1(x)  # (None, 256, 16, 18)
+        x = self.convblock6_2(x)  # (None, 256, 16, 18)
+        x = self.convblock7_1(x)  # (None, 256, 8, 9)
+        x = self.convblock7_2(x)  # (None, 256, 8, 9)
+        x = self.convblock8(x)  # (None, 512, 1, 1)
+
+        x = torch.squeeze(x)  # (None, 512)
+        # x = self.last_layer(x)  # (None, 128)
+
+        # Trunk net
+        t_out = self.trunk(self.xy_coordinate)  # (4900, 512)
+
+        x = torch.einsum('bi,li->bl', x, t_out)
+        x = x.unsqueeze(-1) + self.b  # (None, 4900, 1)
+
+
+        # DeLU
+        d_x = torch.tanh(self.de_layer1(self.xy_coordinate))
+        d_x = torch.heaviside(self.de_layer2(d_x), values=self.values)  # (4900, 256)
+        d_x = self.de_layer3(d_x)  # (4900, 1)
+
+        x = x + d_x
+
+
+        x = x.reshape((-1, 1, self.deepth, self.length))  # (None, 1, 70, 70)
+
+        return x
+
+
+# continuous network  with BatchNorm1d
+class BN_Smooth_Net(nn.Module):
+    def __init__(self, layer_sizes):
+        super(BN_Smooth_Net, self).__init__()
+        self.Wz = nn.ModuleList()
+        self.Bn = nn.ModuleList()
+        for i in range(len(layer_sizes) - 1):
+            bn = nn.BatchNorm1d(layer_sizes[i + 1])
+            m = nn.Linear(layer_sizes[i], layer_sizes[i + 1])
+            nn.init.xavier_normal_(m.weight, gain=1)
+            nn.init.constant_(m.bias, 0.)
+            self.Wz.append(m)
+            self.Bn.append(bn)
+
+
+    def forward(self, x):
+        H = x
+        for i, linear in enumerate(self.Wz[0:-1]):
+            H = self.Bn[i](torch.relu(linear(H)))
+        H = self.Wz[-1](H)
+        return H
+
+
+class FWIDeeponet3(nn.Module):
+    def __init__(self, dim1=32, dim2=64, dim3=128, dim4=256, dim5=512, deepth=70, length=70, sample_spatial=1.0, **kwargs):
+        super(FWIDeeponet3, self).__init__()
+        self.convblock1 = ConvBlock(5, dim1, kernel_size=(7, 1), stride=(2, 1), padding=(3, 0))
+        self.convblock2_1 = ConvBlock(dim1, dim2, kernel_size=(3, 1), stride=(2, 1), padding=(1, 0))
+        self.convblock2_2 = ConvBlock(dim2, dim2, kernel_size=(3, 1), padding=(1, 0))
+        self.convblock3_1 = ConvBlock(dim2, dim2, kernel_size=(3, 1), stride=(2, 1), padding=(1, 0))
+        self.convblock3_2 = ConvBlock(dim2, dim2, kernel_size=(3, 1), padding=(1, 0))
+        self.convblock4_1 = ConvBlock(dim2, dim3, kernel_size=(3, 1), stride=(2, 1), padding=(1, 0))
+        self.convblock4_2 = ConvBlock(dim3, dim3, kernel_size=(3, 1), padding=(1, 0))
+        self.convblock5_1 = ConvBlock(dim3, dim3, stride=2)
+        self.convblock5_2 = ConvBlock(dim3, dim3)
+        self.convblock6_1 = ConvBlock(dim3, dim4, stride=2)
+        self.convblock6_2 = ConvBlock(dim4, dim4)
+        self.convblock7_1 = ConvBlock(dim4, dim4, stride=2)
+        self.convblock7_2 = ConvBlock(dim4, dim4)
+        self.convblock8 = ConvBlock(dim4, dim5, kernel_size=(8, ceil(70 * sample_spatial / 8)), padding=0)
+
+        self.length = length
+        self.deepth = deepth
+
+        self.values = torch.tensor([0.]).to('cuda')
+
+        # Coordinate
+        xc = torch.arange(1, deepth+1)
+        yc = torch.arange(1, length+1)
+        xm, ym = torch.meshgrid(xc, yc)
+        x = xm.reshape(-1, 1)
+        y = ym.reshape(-1, 1)
+        self.xy_coordinate = torch.torch.cat([x, y], dim=1).float()  # (4900, 2)
+        self.xy_coordinate = self.xy_coordinate / length  # 输入转换为（0，1）之间
+        self.xy_coordinate = self.xy_coordinate.to('cuda')
+
+        layer_sizes = [2, 256, 256, 256, 256, 256, 256, 64]
+        self.trunk = BN_Smooth_Net(layer_sizes)
+
+        # layer_sizes = [2, 256, 256, 512, 512]
+        # bias_sizes = [512, 512, 512]
+        # self.trunk = DeLU(layer_sizes, bias_sizes)   # DeLU
+
+        # layer_sizes = [2, 256, 256, 512, 512]
+        # self.trunk = Trunk_Net_Fcl(layer_sizes)       # 全连接神经网络
+
+
+        self.last_layer = nn.Linear(512, 64)
+        nn.init.xavier_normal_(self.last_layer.weight, gain=1)
+        nn.init.constant_(self.last_layer.bias, 0.)
+
+
+        # DeLU
+        self.de_layer1 = nn.Linear(2, 64)
+        self.de_layer2 = nn.Linear(64, 128)
+        self.de_layer3 = nn.Linear(128, 256)
+        self.de_layer4 = nn.Linear(256, 64)
+
+        nn.init.xavier_normal_(self.de_layer1.weight, gain=1)
+        nn.init.constant_(self.de_layer1.bias, 0.)
+        nn.init.xavier_normal_(self.de_layer2.weight, gain=1)
+        nn.init.constant_(self.de_layer2.bias, 0.)
+        nn.init.xavier_normal_(self.de_layer3.weight, gain=1)
+        nn.init.constant_(self.de_layer3.bias, 0.)
+        nn.init.xavier_normal_(self.de_layer4.weight, gain=1)
+        nn.init.constant_(self.de_layer4.bias, 0.)
+
+
+    def forward(self, x):
+        # Branch net
+        x = self.convblock1(x)  # (None, 32, 500, 70)
+        x = self.convblock2_1(x)  # (None, 64, 250, 70)
+        x = self.convblock2_2(x)  # (None, 64, 250, 70)
+        x = self.convblock3_1(x)  # (None, 64, 125, 70)
+        x = self.convblock3_2(x)  # (None, 64, 125, 70)
+        x = self.convblock4_1(x)  # (None, 128, 63, 70)
+        x = self.convblock4_2(x)  # (None, 128, 63, 70)
+        x = self.convblock5_1(x)  # (None, 128, 32, 35)
+        x = self.convblock5_2(x)  # (None, 128, 32, 35)
+        x = self.convblock6_1(x)  # (None, 256, 16, 18)
+        x = self.convblock6_2(x)  # (None, 256, 16, 18)
+        x = self.convblock7_1(x)  # (None, 256, 8, 9)
+        x = self.convblock7_2(x)  # (None, 256, 8, 9)
+        x = self.convblock8(x)  # (None, 512, 1, 1)
+
+        x = torch.squeeze(x)  # (None, 512)
+        x = self.last_layer(x)  # (None, 64)
+
+        # Trunk net
+        t_out = self.trunk(self.xy_coordinate)  # (4900, 64)
+
+        # (x, y) 划分
+        d_x = torch.tanh(self.de_layer1(self.xy_coordinate))
+        d_x = torch.heaviside(self.de_layer2(d_x), values=self.values)  # (4900, 256)
+        d_x = torch.tanh(self.de_layer3(d_x))
+        d_x = self.de_layer4(d_x)  # (4900, 64)
+
+        t_out = t_out + d_x
+
+        x = torch.einsum('bi,li->bl', x, t_out)
+        x = x.unsqueeze(-1)   # (None, 4900, 1)
+
+
+
+
+        x = x + d_x
+
+
+        x = x.reshape((-1, 1, self.deepth, self.length))  # (None, 1, 70, 70)
 
         return x
 
@@ -794,6 +1004,8 @@ model_dict = {
     'Discriminator': Discriminator,
     'UPFWI': FCN4_Deep_Resize_2,
     'FWIDeeponet': FWIDeeponet,
+    'FWIDeeponet2': FWIDeeponet2,
+    'FWIDeeponet3': FWIDeeponet3,
     'FWIEnDeepOnet': FWIEnDeepOnet,
     'DDeeponet': DDeeponet,
     'DeepONet': DeepONet

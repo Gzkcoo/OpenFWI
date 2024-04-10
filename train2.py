@@ -1,23 +1,6 @@
-# © 2022. Triad National Security, LLC. All rights reserved.
 
-# This program was produced under U.S. Government contract 89233218CNA000001 for Los Alamos
 
-# National Laboratory (LANL), which is operated by Triad National Security, LLC for the U.S.
-
-# Department of Energy/National Nuclear Security Administration. All rights in the program are
-
-# reserved by Triad National Security, LLC, and the U.S. Department of Energy/National Nuclear
-
-# Security Administration. The Government is granted for itself and others acting on its behalf a
-
-# nonexclusive, paid-up, irrevocable worldwide license in this material to reproduce, prepare
-
-# derivative works, distribute copies to the public, perform publicly and display publicly, and to permit
-
-# others to do so.
-
-# tensorboard --logdir logs
-
+# 两个输出口的deeponet
 
 import os
 import sys
@@ -72,7 +55,7 @@ def train_one_epoch(model, criterion, optimizer, lr_scheduler,
 
         label = label.to(device)
 
-        output1, output2 = model(data)
+        output1, output2 = model(data)  # （None, 1, 70, 70)  （None, 2)
 
         loss, loss_g1v, loss_g2v, loss_g3v = criterion(output1, label, output2, conlabels)
         loss.backward()

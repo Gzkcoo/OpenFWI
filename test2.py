@@ -1,20 +1,6 @@
-# © 2022. Triad National Security, LLC. All rights reserved.
 
-# This program was produced under U.S. Government contract 89233218CNA000001 for Los Alamos
 
-# National Laboratory (LANL), which is operated by Triad National Security, LLC for the U.S.
-
-# Department of Energy/National Nuclear Security Administration. All rights in the program are
-
-# reserved by Triad National Security, LLC, and the U.S. Department of Energy/National Nuclear
-
-# Security Administration. The Government is granted for itself and others acting on its behalf a
-
-# nonexclusive, paid-up, irrevocable worldwide license in this material to reproduce, prepare
-
-# derivative works, distribute copies to the public, perform publicly and display publicly, and to permit
-
-# others to do so.
+# 两个输出口的deeponet
 
 import os
 import sys
@@ -43,6 +29,7 @@ def evaluate(model, criterions, dataloader, device, k, ctx,
     model.eval()
 
     label_list, label_pred_list = [], []  # store denormalized predcition & gt in numpy
+    con_pred_list =  []  # store denormalized predcition & gt in numpy
     label_tensor, label_pred_tensor = [], []  # store normalized prediction & gt in tensor
     if missing or std:
         data_list, data_noise_list = [], []  # store original data and noisy/muted data
@@ -50,6 +37,15 @@ def evaluate(model, criterions, dataloader, device, k, ctx,
     with torch.no_grad():
         batch_idx = 0
         for data, label in dataloader:
+
+
+            # label二值化处理
+            # ------------------------------
+            conlabels = np.zeros((label.shape[0], 1, 70, 70))
+            for i in range(label.shape[0]):
+                for j in range(label.shape[1]):
+                    conlabels[i, j, ...] = utils.extract_contours(label[i, j, ...])
+
 
             data = data.type(torch.FloatTensor).to(device, non_blocking=True)
             label = label.type(torch.FloatTensor).to(device, non_blocking=True)
@@ -74,17 +70,33 @@ def evaluate(model, criterions, dataloader, device, k, ctx,
                 pred = model(data_noise)
             else:
                 pred, conpred = model(data)
-            conpred.reshape((-1, 1, 70, 70))
+
+            # conpred_np1 = conpred[:, 0].reshape((-1, 1, 70, 70)).cpu().numpy()
+            # conpred_np2 = conpred[:, 1].reshape((-1, 1, 70, 70)).cpu().numpy()
+            # con_pred_list.append(conpred_np1)
+
+            softmax = nn.Softmax(dim=1)
+            conpred_soft = softmax(conpred)
+            conpred_np1 = conpred_soft[:, 0].reshape((-1, 1, 70, 70)).cpu().numpy()
+            conpred_np2 = conpred_soft[:, 1].reshape((-1, 1, 70, 70)).cpu().numpy()
 
             label_pred_np = T.tonumpy_denormalize(pred, ctx['label_min'], ctx['label_max'], exp=False)
             label_pred_list.append(label_pred_np)
             label_pred_tensor.append(pred)
+
 
             # Visualization
             if vis_path and batch_idx < vis_batch:
                 for i in range(vis_sample):
                     plot_velocity(label_pred_np[i, 0], label_np[i, 0],
                                   f'{vis_path}/V_{batch_idx}_{i}.png')  # , vmin=ctx['label_min'], vmax=ctx['label_max'])
+                    plot_single_velocity(conpred_np1[i, 0],
+                                  f'{vis_path}/V_{batch_idx}_{i}_con1.png')
+                    plot_single_velocity(conpred_np2[i, 0],
+                                  f'{vis_path}/V_{batch_idx}_{i}_con2.png')
+                    plot_single_velocity(conlabels[i, 0],
+                                         f'{vis_path}/V_{batch_idx}_{i}_con3.png')
+
                     if missing or std:
                         for ch in [2]:  # range(data.shape[1]):
                             plot_seismic(data_np[i, ch], data_noise_np[i, ch], f'{vis_path}/S_{batch_idx}_{i}_{ch}.png',
@@ -209,7 +221,7 @@ def parse_args():
     parser.add_argument('-s', '--suffix', type=str, default=None, help='subfolder name for this run')
 
     # Model related
-    parser.add_argument('-m', '--model', default='FWIDeeponet', type=str, help='inverse model name')
+    parser.add_argument('-m', '--model', default='DDeeponet', type=str, help='inverse model name')
     parser.add_argument('-no', '--norm', default='bn',
                         help='normalization layer type, support bn, in, ln (default: bn)')
     parser.add_argument('-um', '--up-mode', default=None,

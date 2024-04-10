@@ -294,7 +294,7 @@ def parse_args():
     parser.add_argument('-s', '--suffix', type=str, default=None, help='subfolder name for this run')
 
     # Model related
-    parser.add_argument('-m', '--model', default='FWIDeeponet', type=str, help='inverse model name')
+    parser.add_argument('-m', '--model', default='FWIDeeponet3', type=str, help='inverse model name')
     parser.add_argument('-um', '--up-mode', default=None, help='upsampling layer mode such as "nearest", "bicubic", etc.')
     parser.add_argument('-ss', '--sample-spatial', type=float, default=1.0, help='spatial sampling ratio')
     parser.add_argument('-st', '--sample-temporal', type=int, default=1, help='temporal sampling ratio')
@@ -307,7 +307,7 @@ def parse_args():
     parser.add_argument('--lr-gamma', default=0.1, type=float, help='decrease lr by a factor of lr-gamma')
     parser.add_argument('--lr-warmup-epochs', default=0, type=int, help='number of warmup epochs')   
     parser.add_argument('-eb', '--epoch_block', type=int, default=40, help='epochs in a saved block')
-    parser.add_argument('-nb', '--num_block', type=int, default=3, help='number of saved block')
+    parser.add_argument('-nb', '--num_block', type=int, default=5, help='number of saved block')
     parser.add_argument('-j', '--workers', default=1, type=int, help='number of data loading workers (default: 16)')
     parser.add_argument('--k', default=1, type=float, help='k in log transformation')
     parser.add_argument('--print-freq', default=50, type=int, help='print frequency')

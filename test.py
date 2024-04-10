@@ -214,7 +214,7 @@ def parse_args():
 
     # Test related
     parser.add_argument('-b', '--batch-size', default=128, type=int)
-    parser.add_argument('-j', '--workers', default=2, type=int, help='number of data loading workers (default: 16)')
+    parser.add_argument('-j', '--workers', default=8, type=int, help='number of data loading workers (default: 16)')
     parser.add_argument('--k', default=1, type=float, help='k in log transformation')
     parser.add_argument('-r', '--resume', default='CHECKPOINT.PTH', help='resume from checkpoint')
     parser.add_argument('--vis', help='visualization option', action="store_false")
