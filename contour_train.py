@@ -42,7 +42,6 @@ def train_one_epoch(model, criterion, optimizer, lr_scheduler,
     for data, label in metric_logger.log_every(dataloader, print_freq, header):
         start_time = time.time()
         optimizer.zero_grad()
-        data = data.to(device)
 
         # label二值化处理
         # ------------------------------
@@ -54,6 +53,7 @@ def train_one_epoch(model, criterion, optimizer, lr_scheduler,
         # -------------------------------
 
         label = label.to(device)
+        data = data.to(device)
 
         output1, output2 = model(data)  # （None, 1, 70, 70)  （None, 2)
 

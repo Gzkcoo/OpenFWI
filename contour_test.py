@@ -29,8 +29,11 @@ def evaluate(model, criterions, dataloader, device, k, ctx,
     model.eval()
 
     label_list, label_pred_list = [], []  # store denormalized predcition & gt in numpy
-    con_pred_list =  []  # store denormalized predcition & gt in numpy
     label_tensor, label_pred_tensor = [], []  # store normalized prediction & gt in tensor
+    con_pred_tensor =  []  # 存储轮廓预测输出 in tensor
+    con_tensor = []  # 存储轮廓真实值 in tensor
+
+
     if missing or std:
         data_list, data_noise_list = [], []  # store original data and noisy/muted data
 
@@ -45,6 +48,7 @@ def evaluate(model, criterions, dataloader, device, k, ctx,
             for i in range(label.shape[0]):
                 for j in range(label.shape[1]):
                     conlabels[i, j, ...] = utils.extract_contours(label[i, j, ...])
+
 
 
             data = data.type(torch.FloatTensor).to(device, non_blocking=True)
@@ -71,14 +75,12 @@ def evaluate(model, criterions, dataloader, device, k, ctx,
             else:
                 pred, conpred = model(data)
 
-            # conpred_np1 = conpred[:, 0].reshape((-1, 1, 70, 70)).cpu().numpy()
-            # conpred_np2 = conpred[:, 1].reshape((-1, 1, 70, 70)).cpu().numpy()
-            # con_pred_list.append(conpred_np1)
+            con_pred_tensor.append(conpred)  # 轮廓预测输出
 
             softmax = nn.Softmax(dim=1)
             conpred_soft = softmax(conpred)
-            conpred_np1 = conpred_soft[:, 0].reshape((-1, 1, 70, 70)).cpu().numpy()
-            conpred_np2 = conpred_soft[:, 1].reshape((-1, 1, 70, 70)).cpu().numpy()
+            conpred_np1 = conpred_soft[:, 0].reshape((-1, 1, 70, 70)).cpu().numpy()   # 轮廓输出的第一张概率图 （已经经过softmax处理）
+            conpred_np2 = conpred_soft[:, 1].reshape((-1, 1, 70, 70)).cpu().numpy()   # 轮廓输出的第二张概率图 （已经经过softmax处理）
 
             label_pred_np = T.tonumpy_denormalize(pred, ctx['label_min'], ctx['label_max'], exp=False)
             label_pred_list.append(label_pred_np)
@@ -103,17 +105,29 @@ def evaluate(model, criterions, dataloader, device, k, ctx,
                                          vmin=ctx['data_min'] * 0.01, vmax=ctx['data_max'] * 0.01)
             batch_idx += 1
 
+            conlabels = torch.tensor(conlabels).reshape((-1, 1)).to(device)
+            con_tensor.append(conlabels)  # 轮廓真实值
+
     label, label_pred = np.concatenate(label_list), np.concatenate(label_pred_list)
     label_t, pred_t = torch.cat(label_tensor), torch.cat(label_pred_tensor)
-    # l1 = nn.L1Loss()
-    # l2 = nn.MSELoss()
-    # print(f'MAE: {l1(label_t, pred_t)}')
-    # print(f'MSE: {l2(label_t, pred_t)}')
-    # ssim_loss = pytorch_ssim.SSIM(window_size=11)
-    # print(f'SSIM: {ssim_loss(label_t / 2 + 0.5, pred_t / 2 + 0.5)}')  # (-1, 1) to (0, 1)
+    con_t, con_pred_t = torch.cat(con_tensor), torch.cat(con_pred_tensor)
 
-    # for name, criterion in criterions.items():
-    #     print(f' * Velocity {name}: {criterion(label, label_pred)}')
+
+
+
+
+    l1 = nn.L1Loss()
+    l2 = nn.MSELoss()
+    l3 = nn.CrossEntropyLoss()  # 交叉熵
+    print(f'MAE: {l1(label_t, pred_t)}')
+    print(f'MSE: {l2(label_t, pred_t)}')
+    print(f'CrossEntropy: {l3(con_pred_t, con_t.squeeze().long())}')
+
+    ssim_loss = pytorch_ssim.SSIM(window_size=11)
+    print(f'SSIM: {ssim_loss(label_t / 2 + 0.5, pred_t / 2 + 0.5)}')  # (-1, 1) to (0, 1)
+
+    for name, criterion in criterions.items():
+        print(f' * Velocity {name}: {criterion(label, label_pred)}')
     #     print(f'   | Velocity 2 layers {name}: {criterion(label[:1000], label_pred[:1000])}')
     #     print(f'   | Velocity 3 layers {name}: {criterion(label[1000:2000], label_pred[1000:2000])}')
     #     print(f'   | Velocity 4 layers {name}: {criterion(label[2000:], label_pred[2000:])}')
@@ -214,7 +228,7 @@ def parse_args():
 
     # Path related
     parser.add_argument('-ap', '--anno-path', default='split_files', help='annotation files location')
-    parser.add_argument('-v', '--val-anno', default='flatvel_a_val_origin.txt', help='name of val anno')
+    parser.add_argument('-v', '--val-anno', default='flatvel_a_val.txt', help='name of val anno')
     parser.add_argument('-o', '--output-path', default='Invnet_models',
                         help='path to parent folder to save checkpoints')
     parser.add_argument('-n', '--save-name', default='fcn_l1loss_ffb', help='folder name for this experiment')

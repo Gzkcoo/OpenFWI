@@ -409,9 +409,7 @@ class Trunk_Net_Discon(nn.Module):
         # 连续激活函数 + epsilon * heaviside
         # epsilon 是可学习的向量
         self.epsilon1 = nn.Parameter(torch.randn(1, self.eps_num))
-        self.epsilon11 = nn.Parameter(torch.randn(1, self.eps_num))
         self.epsilon2 = nn.Parameter(torch.randn(1, self.eps_num))
-        self.epsilon22 = nn.Parameter(torch.randn(1, self.eps_num))
 
         # nn.init.xavier_normal_(self.epsilon1, gain=1)
         # nn.init.xavier_normal_(self.epsilon2, gain=1)
@@ -423,9 +421,8 @@ class Trunk_Net_Discon(nn.Module):
         H = self.activation(self.Wz[0](H))
         H = self.activation(self.Wz[1](H))
         H = self.activation(self.Wz[2](H))
-        H = self.epsilon11 * self.activation(self.Wz[3](H)) + self.epsilon1 * torch.heaviside(self.Wz[3](H), values=self.values)
-
-        H = self.epsilon22 * self.activation(self.Wz[4](H)) + self.epsilon2 * torch.heaviside(self.Wz[4](H), values=self.values)
+        H = self.activation(self.Wz[3](H)) + self.epsilon1 * torch.heaviside(self.Wz[3](H), values=self.values)
+        H = self.activation(self.Wz[4](H)) + self.epsilon2 * torch.heaviside(self.Wz[4](H), values=self.values)
         H = self.activation(self.Wz[5](H))
         H = self.Wz[6](H)
 
@@ -953,7 +950,7 @@ class DDeeponet(nn.Module):
 
         # 全连接层
         self.layer1 = nn.Linear(512, 1, bias=False)
-        self.layer2 = nn.Linear(512, 2, bias=False)
+        self.layer2 = nn.Linear(512, 2, bias=False)  # 两个输出
 
 
 
