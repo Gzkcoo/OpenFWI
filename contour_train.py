@@ -331,7 +331,7 @@ def parse_args():
     # Loss related
     parser.add_argument('-g1v', '--lambda_g1v', type=float, default=1)
     parser.add_argument('-g2v', '--lambda_g2v', type=float, default=0)
-    parser.add_argument('-g3v', '--lambda_g3v', type=float, default=1)
+    parser.add_argument('-g3v', '--lambda_g3v', type=float, default=0.3)
 
     # Distributed training related
     parser.add_argument('--sync-bn', action='store_true', help='Use sync batch norm')
