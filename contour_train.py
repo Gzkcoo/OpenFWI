@@ -64,17 +64,27 @@ def train_one_epoch(model, criterion, optimizer, lr_scheduler,
         loss_g1v_val = loss_g1v.item()
         loss_g2v_val = loss_g2v.item()
         loss_g3v_val = loss_g3v.item()
+        loss_val_log10 = torch.log10(loss).item()
+        loss_g1v_val_log10 = torch.log10(loss_g1v).item()
+        loss_g2v_val_log10 = torch.log10(loss_g2v).item()
+        loss_g3v_val_log10 = torch.log10(loss_g3v).item()
         batch_size = data.shape[0]
         metric_logger.update(loss=loss_val, loss_g1v=loss_g1v_val,
-                             loss_g2v=loss_g2v_val, loss_g3v=loss_g3v, lr=optimizer.param_groups[0]['lr'])
+                             loss_g2v=loss_g2v_val, loss_g3v=loss_g3v,
+                             lr=optimizer.param_groups[0]['lr'])
         metric_logger.meters['samples/s'].update(batch_size / (time.time() - start_time))
         if writer:
             writer.add_scalar('loss', loss_val, step)
             writer.add_scalar('loss_g1v', loss_g1v_val, step)
             writer.add_scalar('loss_g2v', loss_g2v_val, step)
             writer.add_scalar('loss_g3v', loss_g3v_val, step)
+            writer.add_scalar('loss_log10', loss_val_log10, step)
+            writer.add_scalar('loss_g1v_log10', loss_g1v_val_log10, step)
+            writer.add_scalar('loss_g2v_log10', loss_g2v_val_log10, step)
+            writer.add_scalar('loss_g3v_log10', loss_g3v_val_log10, step)
         step += 1
         lr_scheduler.step()
+
 
 
 def evaluate(model, criterion, dataloader, device, writer):
@@ -97,6 +107,10 @@ def evaluate(model, criterion, dataloader, device, writer):
             label = label.to(device, non_blocking=True)
             output1, output2 = model(data)
             loss, loss_g1v, loss_g2v, loss_g3v = criterion(output1, label, output2, conlabels)
+            # loss_val_log10 = torch.log10(loss).item()
+            # loss_g1v_val_log10 = torch.log10(loss_g1v).item()
+            # loss_g2v_val_log10 = torch.log10(loss_g2v).item()
+            # loss_g3v_val_log10 = torch.log10(loss_g3v).item()
             metric_logger.update(loss=loss.item(),
                                  loss_g1v=loss_g1v.item(),
                                  loss_g2v=loss_g2v.item(),
@@ -110,6 +124,10 @@ def evaluate(model, criterion, dataloader, device, writer):
         writer.add_scalar('loss_g1v', metric_logger.loss_g1v.global_avg, step)
         writer.add_scalar('loss_g2v', metric_logger.loss_g2v.global_avg, step)
         writer.add_scalar('loss_g3v', metric_logger.loss_g3v.global_avg, step)
+        writer.add_scalar('loss_log10', np.log10(metric_logger.loss.global_avg), step)
+        writer.add_scalar('loss_g1v_log10', np.log10(metric_logger.loss_g1v.global_avg), step)
+        writer.add_scalar('loss_g2v_log10', np.log10(metric_logger.loss_g2v.global_avg), step)
+        writer.add_scalar('loss_g3v_log10', np.log10(metric_logger.loss_g3v.global_avg), step)
     return metric_logger.loss.global_avg
 
 
@@ -213,12 +231,12 @@ def main(args):
     # Define loss function
     l1loss = nn.L1Loss()  # MAE
     l2loss = nn.MSELoss()  # MSE
-    l3loss = nn.CrossEntropyLoss()  # 交叉熵
+    l3loss = network.CEFocalLoss()  # 交叉熵
 
     def criterion(pred, gt, conpred, conlabels):
         loss_g1v = l1loss(pred, gt)
         loss_g2v = l2loss(pred, gt)
-        loss_g3v = l3loss(conpred, conlabels.squeeze().long())
+        loss_g3v = l3loss(conpred, conlabels)
 
         loss = args.lambda_g1v * loss_g1v + args.lambda_g2v * loss_g2v + args.lambda_g3v * loss_g3v
         return loss, loss_g1v, loss_g2v, loss_g3v
@@ -307,7 +325,7 @@ def parse_args():
     parser.add_argument('-s', '--suffix', type=str, default=None, help='subfolder name for this run')
 
     # Model related
-    parser.add_argument('-m', '--model', default='DDeeponet', type=str, help='inverse model name')
+    parser.add_argument('-m', '--model', default='DDeeponet2', type=str, help='inverse model name')
     parser.add_argument('-um', '--up-mode', default=None,
                         help='upsampling layer mode such as "nearest", "bicubic", etc.')
     parser.add_argument('-ss', '--sample-spatial', type=float, default=1.0, help='spatial sampling ratio')
@@ -331,7 +349,7 @@ def parse_args():
     # Loss related
     parser.add_argument('-g1v', '--lambda_g1v', type=float, default=1)
     parser.add_argument('-g2v', '--lambda_g2v', type=float, default=0)
-    parser.add_argument('-g3v', '--lambda_g3v', type=float, default=0.3)
+    parser.add_argument('-g3v', '--lambda_g3v', type=float, default=0.05)
 
     # Distributed training related
     parser.add_argument('--sync-bn', action='store_true', help='Use sync batch norm')
