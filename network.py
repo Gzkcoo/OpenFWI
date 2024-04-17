@@ -905,7 +905,7 @@ class FWIEnDeepOnet(nn.Module):
 
         return x
 
-# deeponet两个输出
+# deeponet两个输出  其中轮廓输出只有一个通道
 class DDeeponet(nn.Module):
     def __init__(self, dim1=32, dim2=64, dim3=128, dim4=256, dim5=512, deepth=70, length=70, sample_spatial=1.0, **kwargs):
         super(DDeeponet, self).__init__()
@@ -990,7 +990,7 @@ class DDeeponet(nn.Module):
         return x1, x2
 
 
-# deeponet只有轮廓输出
+# deeponet两个输出   其中轮廓输出只有一个通道
 class DDeeponet2(nn.Module):
     def __init__(self, dim1=32, dim2=64, dim3=128, dim4=256, dim5=512, deepth=70, length=70, sample_spatial=1.0, **kwargs):
         super(DDeeponet2, self).__init__()
@@ -1031,9 +1031,13 @@ class DDeeponet2(nn.Module):
 
 
         # 全连接层
-        self.layer2 = nn.Linear(512, 2, bias=False)
+        self.layer1 = nn.Linear(512, 1)
+        self.layer2 = nn.Linear(512, 1)  # 轮廓输出
 
-
+        nn.init.xavier_normal_(self.layer1.weight, gain=1)
+        nn.init.constant_(self.layer1.bias, 0.)
+        nn.init.xavier_normal_(self.layer2.weight, gain=1)
+        nn.init.constant_(self.layer2.bias, 0.)
 
 
     def forward(self, x):
@@ -1062,12 +1066,31 @@ class DDeeponet2(nn.Module):
         x = x.repeat(1, 4900, 1)  # (None, 4900, 512)
         x = x * t_out  # (None, 4900, 512)
 
-        x2 = self.layer2(x)  # 输出轮廓  (None, 4900, 2)
+        x1 = self.layer1(x)  # 期望输出真实的速度图  (None, 4900, 1)
+        x2 = self.layer2(x)  # 输出轮廓  (None, 4900, 1)
 
-        x2 = x2.reshape((-1, 2))  # (None, 2)
+        x1 = x1.reshape((-1, 1, 70, 70))  # (None, 1, 70, 70)
+        x2 = x2.reshape((-1, 1))  # (None, 1)
+
+        return x1, x2
 
 
-        return x2
+class CEFocalLoss(nn.Module):
+    def __init__(self, gamma=2, reduction='mean'):
+        super(CEFocalLoss, self).__init__()
+        self.gamma = gamma
+        self.reduction = reduction
+
+    def forward(self, predict, target):
+        pt = torch.sigmoid(predict) # sigmoide获取概率
+        #在原始ce上增加动态权重因子
+        loss = - (1 - pt) ** self.gamma * target * torch.log(pt) - pt ** self.gamma * (1 - target) * torch.log(1 - pt)
+
+        if self.reduction == 'mean':
+            loss = torch.mean(loss)
+        elif self.reduction == 'sum':
+            loss = torch.sum(loss)
+        return loss
 
 
 
