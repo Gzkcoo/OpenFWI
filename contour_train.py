@@ -1,6 +1,5 @@
 
-
-# 两个输出口的deeponet
+# 两个输出口的deeponet    其中轮廓输出只有一个通道
 
 import os
 import sys
@@ -107,10 +106,6 @@ def evaluate(model, criterion, dataloader, device, writer):
             label = label.to(device, non_blocking=True)
             output1, output2 = model(data)
             loss, loss_g1v, loss_g2v, loss_g3v = criterion(output1, label, output2, conlabels)
-            # loss_val_log10 = torch.log10(loss).item()
-            # loss_g1v_val_log10 = torch.log10(loss_g1v).item()
-            # loss_g2v_val_log10 = torch.log10(loss_g2v).item()
-            # loss_g3v_val_log10 = torch.log10(loss_g3v).item()
             metric_logger.update(loss=loss.item(),
                                  loss_g1v=loss_g1v.item(),
                                  loss_g2v=loss_g2v.item(),
@@ -325,7 +320,7 @@ def parse_args():
     parser.add_argument('-s', '--suffix', type=str, default=None, help='subfolder name for this run')
 
     # Model related
-    parser.add_argument('-m', '--model', default='DDeeponet2', type=str, help='inverse model name')
+    parser.add_argument('-m', '--model', default='DDeeponet', type=str, help='inverse model name')
     parser.add_argument('-um', '--up-mode', default=None,
                         help='upsampling layer mode such as "nearest", "bicubic", etc.')
     parser.add_argument('-ss', '--sample-spatial', type=float, default=1.0, help='spatial sampling ratio')
@@ -333,7 +328,7 @@ def parse_args():
     # Training related
     parser.add_argument('-b', '--batch-size', default=64, type=int)
     parser.add_argument('--lr', default=0.001, type=float, help='initial learning rate')
-    parser.add_argument('-lm', '--lr-milestones', nargs='+', default=[], type=int, help='decrease lr on milestones')
+    parser.add_argument('-lm', '--lr-milestones', nargs='+', default=[4, 8, 40, 80], type=int, help='decrease lr on milestones')
     parser.add_argument('--momentum', default=0.9, type=float, help='momentum')
     parser.add_argument('--weight-decay', default=1e-4, type=float, help='weight decay (default: 1e-4)')
     parser.add_argument('--lr-gamma', default=0.1, type=float, help='decrease lr by a factor of lr-gamma')
@@ -349,7 +344,7 @@ def parse_args():
     # Loss related
     parser.add_argument('-g1v', '--lambda_g1v', type=float, default=1)
     parser.add_argument('-g2v', '--lambda_g2v', type=float, default=0)
-    parser.add_argument('-g3v', '--lambda_g3v', type=float, default=0.05)
+    parser.add_argument('-g3v', '--lambda_g3v', type=float, default=0.3)
 
     # Distributed training related
     parser.add_argument('--sync-bn', action='store_true', help='Use sync batch norm')

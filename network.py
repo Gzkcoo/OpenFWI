@@ -906,9 +906,9 @@ class FWIEnDeepOnet(nn.Module):
         return x
 
 # deeponet两个输出  其中轮廓输出只有一个通道
-class DDeeponet(nn.Module):
+class DDeeponet2(nn.Module):
     def __init__(self, dim1=32, dim2=64, dim3=128, dim4=256, dim5=512, deepth=70, length=70, sample_spatial=1.0, **kwargs):
-        super(DDeeponet, self).__init__()
+        super(DDeeponet2, self).__init__()
         self.convblock1 = ConvBlock(5, dim1, kernel_size=(7, 1), stride=(2, 1), padding=(3, 0))
         self.convblock2_1 = ConvBlock(dim1, dim2, kernel_size=(3, 1), stride=(2, 1), padding=(1, 0))
         self.convblock2_2 = ConvBlock(dim2, dim2, kernel_size=(3, 1), padding=(1, 0))
@@ -991,9 +991,9 @@ class DDeeponet(nn.Module):
 
 
 # deeponet两个输出   其中轮廓输出只有一个通道
-class DDeeponet2(nn.Module):
+class DDeeponet(nn.Module):
     def __init__(self, dim1=32, dim2=64, dim3=128, dim4=256, dim5=512, deepth=70, length=70, sample_spatial=1.0, **kwargs):
-        super(DDeeponet2, self).__init__()
+        super(DDeeponet, self).__init__()
         self.convblock1 = ConvBlock(5, dim1, kernel_size=(7, 1), stride=(2, 1), padding=(3, 0))
         self.convblock2_1 = ConvBlock(dim1, dim2, kernel_size=(3, 1), stride=(2, 1), padding=(1, 0))
         self.convblock2_2 = ConvBlock(dim2, dim2, kernel_size=(3, 1), padding=(1, 0))

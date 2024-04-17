@@ -77,10 +77,10 @@ def evaluate(model, criterions, dataloader, device, k, ctx,
 
             con_pred_tensor.append(conpred)  # 轮廓预测输出
 
-
-            conpred_sigmoid = torch.sigmoid(conpred)
-            conpred_np = conpred_sigmoid.reshape((-1, 1, 70, 70)).cpu().numpy()   # 轮廓输出的概率图 （已经经过sigmoid处理）
-
+            softmax = nn.Softmax(dim=1)
+            conpred_soft = softmax(conpred)
+            conpred_np1 = conpred_soft[:, 0].reshape((-1, 1, 70, 70)).cpu().numpy()   # 轮廓输出的第一张概率图 （已经经过softmax处理）
+            conpred_np2 = conpred_soft[:, 1].reshape((-1, 1, 70, 70)).cpu().numpy()   # 轮廓输出的第二张概率图 （已经经过softmax处理）
 
             label_pred_np = T.tonumpy_denormalize(pred, ctx['label_min'], ctx['label_max'], exp=False)
             label_pred_list.append(label_pred_np)
@@ -92,11 +92,12 @@ def evaluate(model, criterions, dataloader, device, k, ctx,
                 for i in range(vis_sample):
                     plot_velocity(label_pred_np[i, 0], label_np[i, 0],
                                   f'{vis_path}/V_{batch_idx}_{i}.png')  # , vmin=ctx['label_min'], vmax=ctx['label_max'])
-                    plot_single_velocity(conpred_np[i, 0],
+                    plot_single_velocity(conpred_np1[i, 0],
                                   f'{vis_path}/V_{batch_idx}_{i}_con1.png')
-
+                    plot_single_velocity(conpred_np2[i, 0],
+                                  f'{vis_path}/V_{batch_idx}_{i}_con2.png')
                     plot_single_velocity(conlabels[i, 0],
-                                         f'{vis_path}/V_{batch_idx}_{i}_truth.png')
+                                         f'{vis_path}/V_{batch_idx}_{i}_con3.png')
 
                     if missing or std:
                         for ch in [2]:  # range(data.shape[1]):
@@ -120,7 +121,7 @@ def evaluate(model, criterions, dataloader, device, k, ctx,
     l3 = nn.CrossEntropyLoss()  # 交叉熵
     print(f'MAE: {l1(label_t, pred_t)}')
     print(f'MSE: {l2(label_t, pred_t)}')
-    print(f'Focal Loss: {l3(con_pred_t, con_t.squeeze().long())}')
+    print(f'CrossEntropy: {l3(con_pred_t, con_t.squeeze().long())}')
 
     ssim_loss = pytorch_ssim.SSIM(window_size=11)
     print(f'SSIM: {ssim_loss(label_t / 2 + 0.5, pred_t / 2 + 0.5)}')  # (-1, 1) to (0, 1)
@@ -234,7 +235,7 @@ def parse_args():
     parser.add_argument('-s', '--suffix', type=str, default=None, help='subfolder name for this run')
 
     # Model related
-    parser.add_argument('-m', '--model', default='DDeeponet', type=str, help='inverse model name')
+    parser.add_argument('-m', '--model', default='DDeeponet2', type=str, help='inverse model name')
     parser.add_argument('-no', '--norm', default='bn',
                         help='normalization layer type, support bn, in, ln (default: bn)')
     parser.add_argument('-um', '--up-mode', default=None,
