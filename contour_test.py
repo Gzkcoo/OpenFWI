@@ -117,10 +117,10 @@ def evaluate(model, criterions, dataloader, device, k, ctx,
 
     l1 = nn.L1Loss()
     l2 = nn.MSELoss()
-    l3 = nn.CrossEntropyLoss()  # 交叉熵
+    l3 = network.CEFocalLoss()  # 交叉熵
     print(f'MAE: {l1(label_t, pred_t)}')
     print(f'MSE: {l2(label_t, pred_t)}')
-    print(f'Focal Loss: {l3(con_pred_t, con_t.squeeze().long())}')
+    print(f'Focal Loss: {l3(con_pred_t, con_t)}')
 
     ssim_loss = pytorch_ssim.SSIM(window_size=11)
     print(f'SSIM: {ssim_loss(label_t / 2 + 0.5, pred_t / 2 + 0.5)}')  # (-1, 1) to (0, 1)

@@ -328,7 +328,7 @@ def parse_args():
     # Training related
     parser.add_argument('-b', '--batch-size', default=64, type=int)
     parser.add_argument('--lr', default=0.001, type=float, help='initial learning rate')
-    parser.add_argument('-lm', '--lr-milestones', nargs='+', default=[4, 8, 40, 80], type=int, help='decrease lr on milestones')
+    parser.add_argument('-lm', '--lr-milestones', nargs='+', default=[], type=int, help='decrease lr on milestones')
     parser.add_argument('--momentum', default=0.9, type=float, help='momentum')
     parser.add_argument('--weight-decay', default=1e-4, type=float, help='weight decay (default: 1e-4)')
     parser.add_argument('--lr-gamma', default=0.1, type=float, help='decrease lr by a factor of lr-gamma')
@@ -344,7 +344,7 @@ def parse_args():
     # Loss related
     parser.add_argument('-g1v', '--lambda_g1v', type=float, default=1)
     parser.add_argument('-g2v', '--lambda_g2v', type=float, default=0)
-    parser.add_argument('-g3v', '--lambda_g3v', type=float, default=0.3)
+    parser.add_argument('-g3v', '--lambda_g3v', type=float, default=5)
 
     # Distributed training related
     parser.add_argument('--sync-bn', action='store_true', help='Use sync batch norm')
