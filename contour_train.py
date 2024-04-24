@@ -63,10 +63,10 @@ def train_one_epoch(model, criterion, optimizer, lr_scheduler,
         loss_g1v_val = loss_g1v.item()
         loss_g2v_val = loss_g2v.item()
         loss_g3v_val = loss_g3v.item()
-        loss_val_log10 = torch.log10(loss).item()
-        loss_g1v_val_log10 = torch.log10(loss_g1v).item()
-        loss_g2v_val_log10 = torch.log10(loss_g2v).item()
-        loss_g3v_val_log10 = torch.log10(loss_g3v).item()
+        # loss_val_log10 = torch.log10(loss).item()
+        # loss_g1v_val_log10 = torch.log10(loss_g1v).item()
+        # loss_g2v_val_log10 = torch.log10(loss_g2v).item()
+        # loss_g3v_val_log10 = torch.log10(loss_g3v).item()
         batch_size = data.shape[0]
         metric_logger.update(loss=loss_val, loss_g1v=loss_g1v_val,
                              loss_g2v=loss_g2v_val, loss_g3v=loss_g3v,
@@ -77,10 +77,10 @@ def train_one_epoch(model, criterion, optimizer, lr_scheduler,
             writer.add_scalar('loss_g1v', loss_g1v_val, step)
             writer.add_scalar('loss_g2v', loss_g2v_val, step)
             writer.add_scalar('loss_g3v', loss_g3v_val, step)
-            writer.add_scalar('loss_log10', loss_val_log10, step)
-            writer.add_scalar('loss_g1v_log10', loss_g1v_val_log10, step)
-            writer.add_scalar('loss_g2v_log10', loss_g2v_val_log10, step)
-            writer.add_scalar('loss_g3v_log10', loss_g3v_val_log10, step)
+            # writer.add_scalar('loss_log10', loss_val_log10, step)
+            # writer.add_scalar('loss_g1v_log10', loss_g1v_val_log10, step)
+            # writer.add_scalar('loss_g2v_log10', loss_g2v_val_log10, step)
+            # writer.add_scalar('loss_g3v_log10', loss_g3v_val_log10, step)
         step += 1
         lr_scheduler.step()
 
@@ -119,10 +119,10 @@ def evaluate(model, criterion, dataloader, device, writer):
         writer.add_scalar('loss_g1v', metric_logger.loss_g1v.global_avg, step)
         writer.add_scalar('loss_g2v', metric_logger.loss_g2v.global_avg, step)
         writer.add_scalar('loss_g3v', metric_logger.loss_g3v.global_avg, step)
-        writer.add_scalar('loss_log10', np.log10(metric_logger.loss.global_avg), step)
-        writer.add_scalar('loss_g1v_log10', np.log10(metric_logger.loss_g1v.global_avg), step)
-        writer.add_scalar('loss_g2v_log10', np.log10(metric_logger.loss_g2v.global_avg), step)
-        writer.add_scalar('loss_g3v_log10', np.log10(metric_logger.loss_g3v.global_avg), step)
+        # writer.add_scalar('loss_log10', np.log10(metric_logger.loss.global_avg), step)
+        # writer.add_scalar('loss_g1v_log10', np.log10(metric_logger.loss_g1v.global_avg), step)
+        # writer.add_scalar('loss_g2v_log10', np.log10(metric_logger.loss_g2v.global_avg), step)
+        # writer.add_scalar('loss_g3v_log10', np.log10(metric_logger.loss_g3v.global_avg), step)
     return metric_logger.loss.global_avg
 
 
@@ -226,7 +226,7 @@ def main(args):
     # Define loss function
     l1loss = nn.L1Loss()  # MAE
     l2loss = nn.MSELoss()  # MSE
-    l3loss = network.CEFocalLoss()  # 交叉熵
+    l3loss = network.BCEFocalLoss()  # 交叉熵
 
     def criterion(pred, gt, conpred, conlabels):
         loss_g1v = l1loss(pred, gt)

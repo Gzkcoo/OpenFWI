@@ -521,8 +521,6 @@ class FWIDeeponet(nn.Module):
         return x
 
 
-
-
 class FWIDeeponet2(nn.Module):
     def __init__(self, dim1=32, dim2=64, dim3=128, dim4=256, dim5=512, deepth=70, length=70, sample_spatial=1.0, **kwargs):
         super(FWIDeeponet2, self).__init__()
@@ -787,6 +785,38 @@ class InversionNet_Encoder(nn.Module):
         x = self.convblock8(x)  # (None, 512, 1, 1)
         x = x.squeeze()  # (None, 512)
         return x
+
+class InversionNet_Decoder(nn.Module):
+    def __init__(self, dim1=32, dim2=64, dim3=128, dim4=256, dim5=512, sample_spatial=1.0, **kwargs):
+        super(InversionNet_Decoder, self).__init__()
+        self.deconv1_1 = DeconvBlock(dim5, dim5, kernel_size=5)
+        self.deconv1_2 = ConvBlock(dim5, dim5)
+        self.deconv2_1 = DeconvBlock(dim5, dim4, kernel_size=4, stride=2, padding=1)
+        self.deconv2_2 = ConvBlock(dim4, dim4)
+        self.deconv3_1 = DeconvBlock(dim4, dim3, kernel_size=4, stride=2, padding=1)
+        self.deconv3_2 = ConvBlock(dim3, dim3)
+        self.deconv4_1 = DeconvBlock(dim3, dim2, kernel_size=4, stride=2, padding=1)
+        self.deconv4_2 = ConvBlock(dim2, dim2)
+        self.deconv5_1 = DeconvBlock(dim2, dim1, kernel_size=4, stride=2, padding=1)
+        self.deconv5_2 = ConvBlock(dim1, dim1)
+        self.deconv6 = ConvBlock_Tanh(dim1, 1)
+
+    def forward(self, x):
+        # Decoder Part
+        x = self.deconv1_1(x)  # (None, 512, 5, 5)
+        x = self.deconv1_2(x)  # (None, 512, 5, 5)
+        x = self.deconv2_1(x)  # (None, 256, 10, 10)
+        x = self.deconv2_2(x)  # (None, 256, 10, 10)
+        x = self.deconv3_1(x)  # (None, 128, 20, 20)
+        x = self.deconv3_2(x)  # (None, 128, 20, 20)
+        x = self.deconv4_1(x)  # (None, 64, 40, 40)
+        x = self.deconv4_2(x)  # (None, 64, 40, 40)
+        x = self.deconv5_1(x)  # (None, 32, 80, 80)
+        x = self.deconv5_2(x)  # (None, 32, 80, 80)
+        x = F.pad(x, [-5, -5, -5, -5], mode="constant", value=0)  # (None, 32, 70, 70) 125, 100
+        x = self.deconv6(x)  # (None, 1, 70, 70)
+        return x
+
 
 class DeepONet(nn.Module):
     def __init__(self, dim1=32, dim2=64, dim3=128, dim4=256, dim5=512, sample_spatial=1.0, **kwargs):
@@ -1075,22 +1105,60 @@ class DDeeponet(nn.Module):
         return x1, x2
 
 
-class CEFocalLoss(nn.Module):
-    def __init__(self, gamma=2, reduction='mean'):
-        super(CEFocalLoss, self).__init__()
+class BCEFocalLoss(torch.nn.Module):
+    def __init__(self, gamma=2, alpha=0.25, reduction='mean'):
+        super(BCEFocalLoss, self).__init__()
         self.gamma = gamma
+        self.alpha = alpha
         self.reduction = reduction
 
     def forward(self, predict, target):
         pt = torch.sigmoid(predict) # sigmoide获取概率
-        #在原始ce上增加动态权重因子
-        loss = - (1 - pt) ** self.gamma * target * torch.log(pt) - pt ** self.gamma * (1 - target) * torch.log(1 - pt)
+        #在原始ce上增加动态权重因子，注意alpha的写法，下面多类时不能这样使用
+        loss = - self.alpha * (1 - pt) ** self.gamma * target * torch.log(pt) - (1 - self.alpha) * pt ** self.gamma * (1 - target) * torch.log(1 - pt)
 
         if self.reduction == 'mean':
             loss = torch.mean(loss)
         elif self.reduction == 'sum':
             loss = torch.sum(loss)
         return loss
+
+
+class InversionDeepOnet(nn.Module):
+    def __init__(self, dim1=32, dim2=64, dim3=128, dim4=256, dim5=512, sample_spatial=1.0, **kwargs):
+        super(InversionDeepOnet, self).__init__()
+
+        self.branch = InversionNet_Encoder(dim1=dim1, dim2=dim2, dim3=dim3, dim4=dim4, dim5=dim5,
+                                            sample_spatial=sample_spatial)
+
+        # 全连接神经网络
+        self.layer_sizes_t = [5, 128, 256, 512]
+        self.trunk = Smooth_Net(self.layer_sizes_t)
+
+        # 解码器
+        self.decoder = InversionNet_Decoder(dim1=dim1, dim2=dim2, dim3=dim3, dim4=dim4, dim5=dim5,
+                                            sample_spatial=sample_spatial)
+
+        self.b = nn.Parameter(torch.zeros(1))
+
+    def forward(self, x, loc):
+
+        x_branch = self.branch(x)   # (None, 512)
+        x_trunk = self.trunk(loc)    # (None, 512)
+        x_dot = x_branch * x_trunk   # (None, 512)
+
+        x_dot = x_dot.reshape(-1, 512, 1, 1)
+        result = self.decoder(x_dot)     # (None, 1, 70, 70)
+
+        return result
+
+
+
+
+
+
+
+
 
 
 
@@ -1105,6 +1173,7 @@ model_dict = {
     'FWIEnDeepOnet': FWIEnDeepOnet,
     'DDeeponet': DDeeponet,
     'DDeeponet2': DDeeponet2,
+    'InversionDeepOnet': InversionDeepOnet,
     'DeepONet': DeepONet
 }
 

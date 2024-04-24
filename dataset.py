@@ -88,6 +88,69 @@ class FWIDataset(Dataset):
     def __len__(self):
         return len(self.batches) * self.file_size
 
+# 带source的OpenFWI
+class MyDataset(Dataset):
+    def __init__(self, anno, preload=False, sample_ratio=1, file_size=500,
+                 transform_data=None, transform_source=None, transform_label=None):
+        if not os.path.exists(anno):
+            print(f'Annotation file {anno} does not exists')
+        self.preload = preload
+        self.sample_ratio = sample_ratio
+        self.file_size = file_size
+        self.transform_data = transform_data
+        self.transform_source = transform_source
+        self.transform_label = transform_label
+        with open(anno, 'r') as f:
+            self.batches = f.readlines()
+        if preload:
+            self.data_list, self.source_list, self.label_list = [], [], []
+            for batch in self.batches:
+                if batch == '\n':
+                    break
+                data, source, label = self.load_every(batch)
+                self.data_list.append(data)
+                self.source_list.append(source)
+                self.label_list.append(label)
+
+    # Load from one line
+    def load_every(self, batch):
+        batch = batch.split('\t')
+        data_path = batch[0]
+        data = np.load(data_path)[:, :, ::self.sample_ratio, :]
+        data = data.astype('float32')
+
+        source_path = batch[1]
+        source = np.load(source_path)
+        source = source.astype('float32')
+
+        label_path = batch[2][:-1]
+        label = np.load(label_path)
+        label = label.astype('float32')
+
+        return data, source, label
+
+    def __getitem__(self, idx):
+        batch_idx, sample_idx = idx // self.file_size, idx % self.file_size
+        if self.preload:
+            data = self.data_list[batch_idx][sample_idx]
+            source = self.source_list[batch_idx][sample_idx]
+            label = self.label_list[batch_idx][sample_idx]
+        else:
+            data, source, label = self.load_every(self.batches[batch_idx])
+            data = data[sample_idx]
+            source = source[sample_idx]
+            label = label[sample_idx]
+        if self.transform_data:
+            data = self.transform_data(data)
+        if self.transform_source:
+            source = self.transform_source(source)
+        if self.transform_label and label is not None:
+            label = self.transform_label(label)
+        return data, source, label if label is not None else np.array([])
+
+    def __len__(self):
+        return len(self.batches) * self.file_size
+
 
 if __name__ == '__main__':
     transform_data = Compose([

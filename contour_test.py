@@ -117,7 +117,7 @@ def evaluate(model, criterions, dataloader, device, k, ctx,
 
     l1 = nn.L1Loss()
     l2 = nn.MSELoss()
-    l3 = network.CEFocalLoss()  # 交叉熵
+    l3 = network.BCEFocalLoss()  # 交叉熵
     print(f'MAE: {l1(label_t, pred_t)}')
     print(f'MSE: {l2(label_t, pred_t)}')
     print(f'Focal Loss: {l3(con_pred_t, con_t)}')

@@ -1,21 +1,3 @@
-# © 2022. Triad National Security, LLC. All rights reserved.
-
-# This program was produced under U.S. Government contract 89233218CNA000001 for Los Alamos
-
-# National Laboratory (LANL), which is operated by Triad National Security, LLC for the U.S.
-
-# Department of Energy/National Nuclear Security Administration. All rights in the program are
-
-# reserved by Triad National Security, LLC, and the U.S. Department of Energy/National Nuclear
-
-# Security Administration. The Government is granted for itself and others acting on its behalf a
-
-# nonexclusive, paid-up, irrevocable worldwide license in this material to reproduce, prepare
-
-# derivative works, distribute copies to the public, perform publicly and display publicly, and to permit
-
-# others to do so.
-
 import os
 import sys
 import time
@@ -106,9 +88,6 @@ def evaluate(model, criterions, dataloader, device, k, ctx,
 
 def main(args):
 
-    print(args)
-    print("torch version: ", torch.__version__)
-    print("torchvision version: ", torchvision.__version__)
 
     utils.mkdir(args.output_path)
     device = torch.device(args.device)
@@ -195,7 +174,7 @@ def parse_args():
     import argparse
     parser = argparse.ArgumentParser(description='FCN Testing')
     parser.add_argument('-d', '--device', default='cuda', help='device')
-    parser.add_argument('-ds', '--dataset', default='flatvel-a', type=str, help='dataset name')
+    parser.add_argument('-ds', '--dataset', default='flatvel-a-s', type=str, help='dataset name')
     parser.add_argument('-fs', '--file-size', default=None, type=int, help='number of samples in each npy file')
 
     # Path related
