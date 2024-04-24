@@ -68,27 +68,17 @@ def evaluate(model, criterion, dataloader, device):
     global loss_history_val_MAE
     global loss_history_val_MSE
     with torch.no_grad():
-        label_tensor, label_pred_tensor = [], []  # store normalized prediction & gt in tensor
-        # test_l1 = 0
-        # test_mse = 0
-        # test_loss = 0
+        label_tensor, label_pred_tensor = [], []  # store normalized prediction & gt in tensorS
         t1 = default_timer()
         for data, source, label in dataloader:
             data = data.to(device, non_blocking=True)
             source = source.to(device, non_blocking=True)
             label = label.to(device, non_blocking=True)
             output = model(data, source)
-            # loss, loss_g1v, loss_g2v = criterion(output, label)
-            # test_l1 += loss_g1v.item()
-            # test_mse += loss_g2v.item()
-            # test_loss += loss.item()
             label_tensor.append(label)
             label_pred_tensor.append(output)
 
     t2 = default_timer()
-    # test_loss /= len(dataloader)
-    # test_l1 /= len(dataloader)
-    # test_mse /= len(dataloader)
     label_t, pred_t = torch.cat(label_tensor), torch.cat(label_pred_tensor)
     loss, loss_g1v, loss_g2v = criterion(pred_t, label_t)
     loss_history_val_MAE.append(loss_g1v.item())
