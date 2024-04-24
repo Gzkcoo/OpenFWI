@@ -68,28 +68,34 @@ def evaluate(model, criterion, dataloader, device):
     global loss_history_val_MAE
     global loss_history_val_MSE
     with torch.no_grad():
-        test_l1 = 0
-        test_mse = 0
-        test_loss = 0
+        label_tensor, label_pred_tensor = [], []  # store normalized prediction & gt in tensor
+        # test_l1 = 0
+        # test_mse = 0
+        # test_loss = 0
         t1 = default_timer()
         for data, source, label in dataloader:
             data = data.to(device, non_blocking=True)
             source = source.to(device, non_blocking=True)
             label = label.to(device, non_blocking=True)
             output = model(data, source)
-            loss, loss_g1v, loss_g2v = criterion(output, label)
-            test_l1 += loss_g1v.item()
-            test_mse += loss_g2v.item()
-            test_loss += loss.item()
+            # loss, loss_g1v, loss_g2v = criterion(output, label)
+            # test_l1 += loss_g1v.item()
+            # test_mse += loss_g2v.item()
+            # test_loss += loss.item()
+            label_tensor.append(label)
+            label_pred_tensor.append(output)
+
     t2 = default_timer()
-    test_loss /= len(dataloader)
-    test_l1 /= len(dataloader)
-    test_mse /= len(dataloader)
-    loss_history_val_MAE.append(test_l1)
-    loss_history_val_MSE.append(test_mse)
+    # test_loss /= len(dataloader)
+    # test_l1 /= len(dataloader)
+    # test_mse /= len(dataloader)
+    label_t, pred_t = torch.cat(label_tensor), torch.cat(label_pred_tensor)
+    loss, loss_g1v, loss_g2v = criterion(pred_t, label_t)
+    loss_history_val_MAE.append(loss_g1v.item())
+    loss_history_val_MSE.append(loss_g2v.item())
     print('Test Loss = {:.6f}, L1Loss = {:.6f}, MSELoss = {:.6f}, using {:.6f}s'.format(
-        test_loss, test_l1, test_mse, t2 - t1))
-    return test_loss
+        loss.item(), loss_g1v.item(), loss_g2v.item(), t2 - t1))
+    return loss
 
 def train(args):
 
@@ -293,7 +299,7 @@ def parse_args():
     parser.add_argument('--lr-gamma', default=0.1, type=float, help='decrease lr by a factor of lr-gamma')
     parser.add_argument('--lr-warmup-epochs', default=0, type=int, help='number of warmup epochs')
     parser.add_argument('-ep', '--epoch', type=int, default=120, help='epochs in a saved block')
-    parser.add_argument('-j', '--workers', default=1, type=int, help='number of data loading workers (default: 16)')
+    parser.add_argument('-j', '--workers', default=4, type=int, help='number of data loading workers (default: 16)')
     parser.add_argument('--k', default=1, type=float, help='k in log transformation')
     parser.add_argument('-r', '--resume', default=None, help='resume from checkpoint')
     parser.add_argument('--start-epoch', default=0, type=int, help='start epoch')
