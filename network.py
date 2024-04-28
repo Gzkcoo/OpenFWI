@@ -419,12 +419,10 @@ class Trunk_Net_Discon(nn.Module):
     def forward(self, x):
         H = x
         H = self.activation(self.Wz[0](H))
-        H = self.activation(self.Wz[1](H))
-        H = self.activation(self.Wz[2](H))
-        H = self.activation(self.Wz[3](H)) + self.epsilon1 * torch.heaviside(self.Wz[3](H), values=self.values)
-        H = self.activation(self.Wz[4](H)) + self.epsilon2 * torch.heaviside(self.Wz[4](H), values=self.values)
-        H = self.activation(self.Wz[5](H))
-        H = self.Wz[6](H)
+        H = self.activation(self.Wz[1](H)) + self.epsilon1 * torch.heaviside(self.Wz[1](H), values=self.values)
+        H = self.activation(self.Wz[2](H)) + self.epsilon2 * torch.heaviside(self.Wz[2](H), values=self.values)
+        H = self.activation(self.Wz[3](H))
+        H = self.Wz[4](H)
 
         return H
 
@@ -1132,8 +1130,12 @@ class InversionDeepOnet(nn.Module):
                                             sample_spatial=sample_spatial)
 
         # 全连接神经网络
-        self.layer_sizes_t = [5, 128, 256, 512]
-        self.trunk = Smooth_Net(self.layer_sizes_t)
+        # self.layer_sizes_t = [5, 128, 256, 512]
+        # self.trunk = Smooth_Net(self.layer_sizes_t)
+
+        # 不连续神经网络
+        self.layer_sizes_t = [5, 128, 32, 32, 256, 512]
+        self.trunk = Trunk_Net_Discon(self.layer_sizes_t, 32)
 
         # 解码器
         self.decoder = InversionNet_Decoder(dim1=dim1, dim2=dim2, dim3=dim3, dim4=dim4, dim5=dim5,

@@ -174,7 +174,7 @@ def parse_args():
     import argparse
     parser = argparse.ArgumentParser(description='FCN Testing')
     parser.add_argument('-d', '--device', default='cuda', help='device')
-    parser.add_argument('-ds', '--dataset', default='flatvel-a-s', type=str, help='dataset name')
+    parser.add_argument('-ds', '--dataset', default='flatvel-a', type=str, help='dataset name')
     parser.add_argument('-fs', '--file-size', default=None, type=int, help='number of samples in each npy file')
 
     # Path related
@@ -185,7 +185,7 @@ def parse_args():
     parser.add_argument('-s', '--suffix', type=str, default=None, help='subfolder name for this run')
 
     # Model related
-    parser.add_argument('-m', '--model', default='FWIDeeponet', type=str, help='inverse model name')
+    parser.add_argument('-m', '--model', default='InversionNet', type=str, help='inverse model name')
     parser.add_argument('-no', '--norm', default='bn', help='normalization layer type, support bn, in, ln (default: bn)')
     parser.add_argument('-um', '--up-mode', default=None, help='upsampling layer mode such as "nearest", "bicubic", etc.')
     parser.add_argument('-ss', '--sample-spatial', type=float, default=1.0, help='spatial sampling ratio')

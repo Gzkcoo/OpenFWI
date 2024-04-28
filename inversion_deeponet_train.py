@@ -85,7 +85,7 @@ def evaluate(model, criterion, dataloader, device):
     loss_history_val_MSE.append(loss_g2v.item())
     print('Test Loss = {:.6f}, L1Loss = {:.6f}, MSELoss = {:.6f}, using {:.6f}s'.format(
         loss.item(), loss_g1v.item(), loss_g2v.item(), t2 - t1))
-    return loss
+    return loss.item()
 
 def train(args):
 
@@ -215,40 +215,24 @@ def train(args):
     # loss可视化
     # 绘制loss曲线图
     plt.figure(1)
-    ax11 = plt.subplot(1, 2, 1)
-    ax11.plot(np.arange(1, args.epoch+1), loss_history_MAE, label='train')
-    ax11.plot(np.arange(1, args.epoch+1), loss_history_val_MAE, label='test')
+    ax11 = plt.subplot(1, 1, 1)
+    ax11.semilogy(np.arange(1, args.epoch+1), loss_history_MAE, label='train')
+    ax11.semilogy(np.arange(1, args.epoch+1), loss_history_val_MAE, label='test')
     ax11.set_xlabel('Epochs')
     ax11.set_ylabel('Loss')
     ax11.set_title('MAELoss')
     ax11.legend()
 
-    ax12 = plt.subplot(1, 2, 2)
-    ax12.plot(np.arange(1, args.epoch + 1), np.log10(loss_history_MAE), label='train')
-    ax12.plot(np.arange(1, args.epoch + 1), np.log10(loss_history_val_MAE), label='test')
-    ax12.set_xlabel('Epochs')
-    ax12.set_ylabel('Loss')
-    ax12.set_title('MAELoss')
-    ax12.legend()
-
     plt.savefig('{}MAE.png'.format(args.output_path))
 
     plt.figure(2)
-    ax21 = plt.subplot(1, 2, 1)
-    ax21.plot(np.arange(1, args.epoch + 1), loss_history_MSE, label='train')
-    ax21.plot(np.arange(1, args.epoch + 1), loss_history_val_MSE, label='test')
+    ax21 = plt.subplot(1, 1, 1)
+    ax21.semilogy(np.arange(1, args.epoch + 1), loss_history_MSE, label='train')
+    ax21.semilogy(np.arange(1, args.epoch + 1), loss_history_val_MSE, label='test')
     ax21.set_xlabel('Epochs')
     ax21.set_ylabel('Loss')
     ax21.set_title('MSELoss')
     ax21.legend()
-
-    ax22 = plt.subplot(1, 2, 2)
-    ax22.plot(np.arange(1, args.epoch + 1), np.log10(loss_history_MSE), label='train')
-    ax22.plot(np.arange(1, args.epoch + 1), np.log10(loss_history_val_MSE), label='test')
-    ax22.set_xlabel('Epochs')
-    ax22.set_ylabel('Loss')
-    ax22.set_title('MSELoss')
-    ax22.legend()
 
     plt.savefig('{}MSE.png'.format(args.output_path))
 
@@ -283,13 +267,13 @@ def parse_args():
     # Training related
     parser.add_argument('-b', '--batch-size', default=64, type=int)
     parser.add_argument('--lr', default=0.001, type=float, help='initial learning rate')
-    parser.add_argument('-lm', '--lr-milestones', nargs='+', default=[40, 80], type=int, help='decrease lr on milestones')
+    parser.add_argument('-lm', '--lr-milestones', nargs='+', default=[30, 60, 90], type=int, help='decrease lr on milestones')
     parser.add_argument('--momentum', default=0.9, type=float, help='momentum')
     parser.add_argument('--weight-decay', default=1e-4, type=float, help='weight decay (default: 1e-4)')
     parser.add_argument('--lr-gamma', default=0.1, type=float, help='decrease lr by a factor of lr-gamma')
     parser.add_argument('--lr-warmup-epochs', default=0, type=int, help='number of warmup epochs')
     parser.add_argument('-ep', '--epoch', type=int, default=120, help='epochs in a saved block')
-    parser.add_argument('-j', '--workers', default=4, type=int, help='number of data loading workers (default: 16)')
+    parser.add_argument('-j', '--workers', default=1, type=int, help='number of data loading workers (default: 16)')
     parser.add_argument('--k', default=1, type=float, help='k in log transformation')
     parser.add_argument('-r', '--resume', default=None, help='resume from checkpoint')
     parser.add_argument('--start-epoch', default=0, type=int, help='start epoch')
