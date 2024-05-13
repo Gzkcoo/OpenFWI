@@ -99,7 +99,7 @@ def train(args):
 
     with open('dataset_config.json') as f:
         try:
-            ctx = json.load(f)['flatvel-a']
+            ctx = json.load(f)[args.dataset]
         except KeyError:
             print('Unsupported dataset.')
             sys.exit()
@@ -245,13 +245,13 @@ def parse_args():
     import argparse
     parser = argparse.ArgumentParser(description='FCN Training')
     parser.add_argument('-d', '--device', default='cuda', help='device')
-    parser.add_argument('-ds', '--dataset', default='flatvel-a-s', type=str, help='dataset name')
+    parser.add_argument('-ds', '--dataset', default='flatvel-b-L', type=str, help='dataset name')
     parser.add_argument('-fs', '--file-size', default=None, type=int, help='number of samples in each npy file')
 
     # Path related
     parser.add_argument('-ap', '--anno-path', default='split_files', help='annotation files location')
-    parser.add_argument('-t', '--train-anno', default='flatvel_a_train_s.txt', help='name of train anno')
-    parser.add_argument('-v', '--val-anno', default='flatvel_a_val_s_origin.txt', help='name of val anno')
+    parser.add_argument('-t', '--train-anno', default='flatvel_b_train_L.txt', help='name of train anno')
+    parser.add_argument('-v', '--val-anno', default='flatvel_b_val_L.txt', help='name of val anno')
     parser.add_argument('-o', '--output-path', default='Invnet_models',
                         help='path to parent folder to save checkpoints')
     parser.add_argument('-l', '--log-path', default='Invnet_models', help='path to parent folder to save logs')
@@ -259,7 +259,7 @@ def parse_args():
     parser.add_argument('-s', '--suffix', type=str, default=None, help='subfolder name for this run')
 
     # Model related
-    parser.add_argument('-m', '--model', default='InversionDeepOnet', type=str, help='inverse model name')
+    parser.add_argument('-m', '--model', default='DDNetDeepOnet', type=str, help='inverse model name')
     parser.add_argument('-um', '--up-mode', default=None,
                         help='upsampling layer mode such as "nearest", "bicubic", etc.')
     parser.add_argument('-ss', '--sample-spatial', type=float, default=1.0, help='spatial sampling ratio')
@@ -267,7 +267,7 @@ def parse_args():
     # Training related
     parser.add_argument('-b', '--batch-size', default=64, type=int)
     parser.add_argument('--lr', default=0.001, type=float, help='initial learning rate')
-    parser.add_argument('-lm', '--lr-milestones', nargs='+', default=[30, 60, 90], type=int, help='decrease lr on milestones')
+    parser.add_argument('-lm', '--lr-milestones', nargs='+', default=[40, 80], type=int, help='decrease lr on milestones')
     parser.add_argument('--momentum', default=0.9, type=float, help='momentum')
     parser.add_argument('--weight-decay', default=1e-4, type=float, help='weight decay (default: 1e-4)')
     parser.add_argument('--lr-gamma', default=0.1, type=float, help='decrease lr by a factor of lr-gamma')
@@ -283,7 +283,13 @@ def parse_args():
     parser.add_argument('-g2v', '--lambda_g2v', type=float, default=0)
     parser.add_argument('-g3v', '--lambda_g3v', type=float, default=5)
 
+    # nuaa
+    parser.add_argument('--data_url', type=str, default='.\FWIOpenData\S\\')  # data_url
+
+
     args = parser.parse_args()
+
+
 
     args.output_path = os.path.join(args.output_path, args.save_name, args.suffix or '')
     args.log_path = os.path.join(args.log_path, args.save_name, args.suffix or '')

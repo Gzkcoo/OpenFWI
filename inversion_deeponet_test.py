@@ -68,7 +68,7 @@ def test(args):
 
     with open('dataset_config.json') as f:
         try:
-            ctx = json.load(f)['flatvel-a']
+            ctx = json.load(f)[args.dataset]
         except KeyError:
             print('Unsupported dataset.')
             sys.exit()
@@ -150,12 +150,12 @@ def parse_args():
     import argparse
     parser = argparse.ArgumentParser(description='FCN Testing')
     parser.add_argument('-d', '--device', default='cuda', help='device')
-    parser.add_argument('-ds', '--dataset', default='flatvel-a-s', type=str, help='dataset name')
+    parser.add_argument('-ds', '--dataset', default='curvefault-a-L', type=str, help='dataset name')
     parser.add_argument('-fs', '--file-size', default=None, type=int, help='number of samples in each npy file')
 
     # Path related
     parser.add_argument('-ap', '--anno-path', default='split_files', help='annotation files location')
-    parser.add_argument('-v', '--val-anno', default='flatvel_a_val_s_origin.txt', help='name of val anno')
+    parser.add_argument('-v', '--val-anno', default='curvefault_a_val_L.txt', help='name of val anno')
     parser.add_argument('-o', '--output-path', default='Invnet_models', help='path to parent folder to save checkpoints')
     parser.add_argument('-n', '--save-name', default='fcn_l1loss_ffb', help='folder name for this experiment')
     parser.add_argument('-s', '--suffix', type=str, default=None, help='subfolder name for this run')

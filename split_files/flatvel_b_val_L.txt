@@ -1,0 +1,2 @@
+E:\FWI\FWI-L\DATA\FlatVel_B\data\data51.npy	E:\FWI\FWI-L\DATA\FlatVel_B\source\source51.npy	E:\FWI\FWI-L\DATA\FlatVel_B\model\model51.npy
+E:\FWI\FWI-L\DATA\FlatVel_B\data\data52.npy	E:\FWI\FWI-L\DATA\FlatVel_B\source\source52.npy	E:\FWI\FWI-L\DATA\FlatVel_B\model\model52.npy

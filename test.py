@@ -174,12 +174,12 @@ def parse_args():
     import argparse
     parser = argparse.ArgumentParser(description='FCN Testing')
     parser.add_argument('-d', '--device', default='cuda', help='device')
-    parser.add_argument('-ds', '--dataset', default='flatvel-a', type=str, help='dataset name')
+    parser.add_argument('-ds', '--dataset', default='flatvel-b-L', type=str, help='dataset name')
     parser.add_argument('-fs', '--file-size', default=None, type=int, help='number of samples in each npy file')
 
     # Path related
     parser.add_argument('-ap', '--anno-path', default='split_files', help='annotation files location')
-    parser.add_argument('-v', '--val-anno', default='flatvel_a_val_origin.txt', help='name of val anno')
+    parser.add_argument('-v', '--val-anno', default='flatvel_b_val_L.txt', help='name of val anno')
     parser.add_argument('-o', '--output-path', default='Invnet_models', help='path to parent folder to save checkpoints')
     parser.add_argument('-n', '--save-name', default='fcn_l1loss_ffb', help='folder name for this experiment')
     parser.add_argument('-s', '--suffix', type=str, default=None, help='subfolder name for this run')
@@ -192,8 +192,8 @@ def parse_args():
     parser.add_argument('-st', '--sample-temporal', type=int, default=1, help='temporal sampling ratio')
 
     # Test related
-    parser.add_argument('-b', '--batch-size', default=128, type=int)
-    parser.add_argument('-j', '--workers', default=8, type=int, help='number of data loading workers (default: 16)')
+    parser.add_argument('-b', '--batch-size', default=64, type=int)
+    parser.add_argument('-j', '--workers', default=4, type=int, help='number of data loading workers (default: 16)')
     parser.add_argument('--k', default=1, type=float, help='k in log transformation')
     parser.add_argument('-r', '--resume', default='CHECKPOINT.PTH', help='resume from checkpoint')
     parser.add_argument('--vis', help='visualization option', action="store_false")

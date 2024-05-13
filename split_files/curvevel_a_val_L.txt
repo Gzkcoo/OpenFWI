@@ -1,0 +1,8 @@
+E:\FWI\FWI-L\DATA\CurveVel_A\data\data51.npy	E:\FWI\FWI-L\DATA\CurveVel_A\source\source51.npy	E:\FWI\FWI-L\DATA\CurveVel_A\model\model51.npy
+E:\FWI\FWI-L\DATA\CurveVel_A\data\data52.npy	E:\FWI\FWI-L\DATA\CurveVel_A\source\source52.npy	E:\FWI\FWI-L\DATA\CurveVel_A\model\model52.npy
+E:\FWI\FWI-L\DATA\CurveVel_A\data\data53.npy	E:\FWI\FWI-L\DATA\CurveVel_A\source\source53.npy	E:\FWI\FWI-L\DATA\CurveVel_A\model\model53.npy
+E:\FWI\FWI-L\DATA\CurveVel_A\data\data54.npy	E:\FWI\FWI-L\DATA\CurveVel_A\source\source54.npy	E:\FWI\FWI-L\DATA\CurveVel_A\model\model54.npy
+E:\FWI\FWI-L\DATA\CurveVel_A\data\data55.npy	E:\FWI\FWI-L\DATA\CurveVel_A\source\source55.npy	E:\FWI\FWI-L\DATA\CurveVel_A\model\model55.npy
+E:\FWI\FWI-L\DATA\CurveVel_A\data\data56.npy	E:\FWI\FWI-L\DATA\CurveVel_A\source\source56.npy	E:\FWI\FWI-L\DATA\CurveVel_A\model\model56.npy
+E:\FWI\FWI-L\DATA\CurveVel_A\data\data57.npy	E:\FWI\FWI-L\DATA\CurveVel_A\source\source57.npy	E:\FWI\FWI-L\DATA\CurveVel_A\model\model57.npy
+E:\FWI\FWI-L\DATA\CurveVel_A\data\data58.npy	E:\FWI\FWI-L\DATA\CurveVel_A\source\source58.npy	E:\FWI\FWI-L\DATA\CurveVel_A\model\model58.npy

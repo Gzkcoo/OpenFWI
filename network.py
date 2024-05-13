@@ -816,6 +816,39 @@ class InversionNet_Decoder(nn.Module):
         return x
 
 
+class InversionNet_Decoder2(nn.Module):
+    def __init__(self, dim1=32, dim2=64, dim3=128, dim4=256, dim5=512, sample_spatial=1.0, **kwargs):
+        super(InversionNet_Decoder2, self).__init__()
+        self.deconv1_1 = DeconvBlock(dim5, dim5, kernel_size=5)
+        self.deconv1_2 = ConvBlock(dim5, dim5)
+        self.deconv2_1 = DeconvBlock(dim5, dim4, kernel_size=4, stride=2, padding=1)
+        self.deconv2_2 = ConvBlock(dim4, dim4)
+        self.deconv3_1 = DeconvBlock(dim4, dim3, kernel_size=4, stride=2, padding=1)
+        self.deconv3_2 = ConvBlock(dim3, dim3)
+        self.deconv4_1 = DeconvBlock(dim3, dim2, kernel_size=4, stride=2, padding=1)
+        self.deconv4_2 = ConvBlock(dim2, dim2)
+        self.deconv5_1 = DeconvBlock(dim2, dim1, kernel_size=4, stride=2, padding=1)
+        self.deconv5_2 = ConvBlock(dim1, dim1)
+        self.deconv6_1 = ConvBlock_Tanh(dim1, 1)
+        self.deconv6_2 = ConvBlock_Tanh(dim1, 2)
+
+    def forward(self, x):
+        # Decoder Part
+        x = self.deconv1_1(x)  # (None, 512, 5, 5)
+        x = self.deconv1_2(x)  # (None, 512, 5, 5)
+        x = self.deconv2_1(x)  # (None, 256, 10, 10)
+        x = self.deconv2_2(x)  # (None, 256, 10, 10)
+        x = self.deconv3_1(x)  # (None, 128, 20, 20)
+        x = self.deconv3_2(x)  # (None, 128, 20, 20)
+        x = self.deconv4_1(x)  # (None, 64, 40, 40)
+        x = self.deconv4_2(x)  # (None, 64, 40, 40)
+        x = self.deconv5_1(x)  # (None, 32, 80, 80)
+        x = self.deconv5_2(x)  # (None, 32, 80, 80)
+        x = F.pad(x, [-5, -5, -5, -5], mode="constant", value=0)  # (None, 32, 70, 70) 125, 100
+        x1 = self.deconv6_1(x)  # (None, 1, 70, 70)
+        x2 = self.deconv6_2(x)  # (None, 2, 70, 70)
+        return x1, x2
+
 class DeepONet(nn.Module):
     def __init__(self, dim1=32, dim2=64, dim3=128, dim4=256, dim5=512, sample_spatial=1.0, **kwargs):
         super(DeepONet, self).__init__()
@@ -1130,12 +1163,12 @@ class InversionDeepOnet(nn.Module):
                                             sample_spatial=sample_spatial)
 
         # 全连接神经网络
-        # self.layer_sizes_t = [5, 128, 256, 512]
-        # self.trunk = Smooth_Net(self.layer_sizes_t)
+        self.layer_sizes_t = [5, 256,256, 256, 512]
+        self.trunk = Smooth_Net(self.layer_sizes_t)
 
         # 不连续神经网络
-        self.layer_sizes_t = [5, 128, 32, 32, 256, 512]
-        self.trunk = Trunk_Net_Discon(self.layer_sizes_t, 32)
+        # self.layer_sizes_t = [5, 128, 32, 32, 256, 512]
+        # self.trunk = Trunk_Net_Discon(self.layer_sizes_t, 32)
 
         # 解码器
         self.decoder = InversionNet_Decoder(dim1=dim1, dim2=dim2, dim3=dim3, dim4=dim4, dim5=dim5,
@@ -1155,11 +1188,297 @@ class InversionDeepOnet(nn.Module):
         return result
 
 
+class InversionDeepOnet2(nn.Module):
+    def __init__(self, dim1=32, dim2=64, dim3=128, dim4=256, dim5=512, sample_spatial=1.0, **kwargs):
+        super(InversionDeepOnet2, self).__init__()
+
+        self.branch = InversionNet_Encoder(dim1=dim1, dim2=dim2, dim3=dim3, dim4=dim4, dim5=dim5,
+                                            sample_spatial=sample_spatial)
+
+        # 全连接神经网络
+        # self.layer_sizes_t = [5, 128, 256, 512]
+        # self.trunk = Smooth_Net(self.layer_sizes_t)
+
+        # 不连续神经网络
+        self.layer_sizes_t = [5, 128, 32, 32, 256, 512]
+        self.trunk = Trunk_Net_Discon(self.layer_sizes_t, 32)
+
+        # 解码器
+        self.decoder = InversionNet_Decoder2(dim1=dim1, dim2=dim2, dim3=dim3, dim4=dim4, dim5=dim5,
+                                            sample_spatial=sample_spatial)
+
+        self.b = nn.Parameter(torch.zeros(1))
+
+    def forward(self, x, loc):
+
+        x_branch = self.branch(x)   # (None, 512)
+        x_trunk = self.trunk(loc)    # (None, 512)
+        x_dot = x_branch * x_trunk   # (None, 512)
+
+        x_dot = x_dot.reshape(-1, 512, 1, 1)
+        result1, result2 = self.decoder(x_dot)     # (None, 1, 70, 70)
+
+        return result1, result2
 
 
 
 
+class SeismicRecordDownSampling(nn.Module):
+    '''
+    Downsampling module for seismic records
+    '''
+    def __init__(self, shot_num):
+        super().__init__()
 
+        self.pre_dim_reducer1 = ConvBlock(shot_num, 8, kernel_size=(3, 1), stride=(2, 1), padding=(1, 0))
+        self.pre_dim_reducer2 = ConvBlock(8, 8, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+
+        self.pre_dim_reducer3 = ConvBlock(8, 16, kernel_size=(3, 1), stride=(2, 1), padding=(1, 0))
+        self.pre_dim_reducer4 = ConvBlock(16, 16, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+
+        self.pre_dim_reducer5 = ConvBlock(16, 32, kernel_size=(3, 1), stride=(2, 1), padding=(1, 0))
+        self.pre_dim_reducer6 = ConvBlock(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+
+    def forward(self, x):
+
+        width = x.shape[3]
+        new_size = [width * 8, width]
+        dimred0 = F.interpolate(x, size=new_size, mode='bilinear', align_corners=False)
+
+        dimred1 = self.pre_dim_reducer1(dimred0)
+        dimred2 = self.pre_dim_reducer2(dimred1)
+        dimred3 = self.pre_dim_reducer3(dimred2)
+        dimred4 = self.pre_dim_reducer4(dimred3)
+        dimred5 = self.pre_dim_reducer5(dimred4)
+        dimred6 = self.pre_dim_reducer6(dimred5)
+
+        return dimred6
+
+class unetConv2(nn.Module):
+    def __init__(self, in_size, out_size, is_batchnorm, activ_fuc = nn.ReLU(inplace=True)):
+        '''
+        Conventional Network Unit
+        (The red arrow shown in Fig 1 of the paper)
+
+        :param in_size:      Number of channels of input
+        :param out_size:     Number of channels of output
+        :param is_batchnorm: Whether to use BN
+        :param activ_fuc:    Activation function
+        '''
+        super(unetConv2, self).__init__()
+        if is_batchnorm:
+            self.conv1 = nn.Sequential(nn.Conv2d(in_size, out_size, 3, 1, 1),
+                                       nn.BatchNorm2d(out_size),
+                                       activ_fuc)
+            self.conv2 = nn.Sequential(nn.Conv2d(out_size, out_size, 3, 1, 1),
+                                       nn.BatchNorm2d(out_size),
+                                       activ_fuc)
+        else:
+            self.conv1 = nn.Sequential(nn.Conv2d(in_size, out_size, 3, 1, 1),
+                                       activ_fuc)
+            self.conv2 = nn.Sequential(nn.Conv2d(out_size, out_size, 3, 1, 1),
+                                       activ_fuc)
+
+    def forward(self, inputs):
+        outputs = self.conv1(inputs)
+        outputs = self.conv2(outputs)
+        return outputs
+
+class unetDown(nn.Module):
+    def __init__(self, in_size, out_size, is_batchnorm, activ_fuc = nn.ReLU(inplace=True)):
+        '''
+        Downsampling Unit
+        (The purple arrow shown in Fig 1 of the paper)
+
+        :param in_size:      Number of channels of input
+        :param out_size:     Number of channels of output
+        :param is_batchnorm: Whether to use BN
+        :param activ_fuc:    Activation function
+        '''
+        super(unetDown, self).__init__()
+        self.conv = unetConv2(in_size, out_size, is_batchnorm, activ_fuc)
+        self.down = nn.MaxPool2d(2, 2, ceil_mode=True)
+
+    def forward(self, inputs):
+        skip_output = self.conv(inputs)
+        outputs = self.down(skip_output)
+        return outputs
+
+class unetUp(nn.Module):
+    def __init__(self, in_size, out_size, output_lim, is_deconv, activ_fuc=nn.ReLU(inplace=True)):
+        '''
+        Upsampling Unit
+        (The yellow arrow shown in Fig 1 of the paper)
+
+        :param in_size:      Number of channels of input
+        :param out_size:     Number of channels of output
+        :param is_deconv:    Whether to use deconvolution
+        :param activ_fuc:    Activation function
+        '''
+        super(unetUp, self).__init__()
+        self.output_lim = output_lim
+        self.conv = unetConv2(in_size, out_size, True, activ_fuc)
+        if is_deconv:
+            self.up = nn.ConvTranspose2d(in_size, out_size, kernel_size=2, stride=2)
+        else:
+            self.up = nn.UpsamplingBilinear2d(scale_factor=2)
+
+    def forward(self, input1, input2):
+        input2 = self.up(input2)
+        input2 = F.interpolate(input2, size=self.output_lim, mode='bilinear', align_corners=False)
+        return self.conv(torch.cat([input1, input2], 1))
+
+class netUp(nn.Module):
+    def __init__(self, in_size, out_size, output_lim, is_deconv):
+        '''
+        Upsampling Unit
+        (The yellow arrow shown in Fig 1 of the paper)
+
+        :param in_size:      Number of channels of input
+        :param out_size:     Number of channels of output
+        :param is_deconv:    Whether to use deconvolution
+        :param activ_fuc:    Activation function
+        '''
+        super(netUp, self).__init__()
+        self.output_lim = output_lim
+        if is_deconv:
+            self.up = nn.ConvTranspose2d(in_size, out_size, kernel_size=2, stride=2)
+        else:
+            self.up = nn.UpsamplingBilinear2d(scale_factor=2)
+
+    def forward(self, input):
+        input = self.up(input)
+        output = F.interpolate(input, size=self.output_lim, mode='bilinear', align_corners=False)
+        return output
+
+class DDNet70Model(nn.Module):
+    def __init__(self, n_classes=1, in_channels=5, is_deconv=True, is_batchnorm=True):
+        '''
+        DD-Net70 Architecture
+
+        :param n_classes:    Number of channels of output (any single decoder)
+        :param in_channels:  Number of channels of network input
+        :param is_deconv:    Whether to use deconvolution
+        :param is_batchnorm: Whether to use BN
+        '''
+        super(DDNet70Model, self).__init__()
+        self.is_deconv = is_deconv
+        self.in_channels = in_channels
+        self.is_batchnorm = is_batchnorm
+        self.n_classes = n_classes
+
+        self.pre_seis_conv = SeismicRecordDownSampling(self.in_channels)
+
+        # Intrinsic UNet section
+        self.down3 = unetDown(32, 64, self.is_batchnorm)
+        self.down4 = unetDown(64, 128, self.is_batchnorm)
+        self.down5 = unetDown(128, 256, self.is_batchnorm)
+
+        self.center = unetDown(256, 512, self.is_batchnorm)
+
+        self.up5 = unetUp(512, 256, output_lim=[9, 9], is_deconv=self.is_deconv)
+        self.up4 = unetUp(256, 128, output_lim=[18, 18], is_deconv=self.is_deconv)
+        self.up3 = netUp(128, 64, output_lim=[35, 35], is_deconv=self.is_deconv)
+        self.up2 = netUp(64, 32, output_lim=[70, 70], is_deconv=self.is_deconv)
+
+        self.dc1_final = ConvBlock_Tanh(32, self.n_classes)
+        self.dc2_final = ConvBlock_Tanh(32, 2)
+
+    def forward(self, inputs, _=None):
+        '''
+
+        :param inputs:      Input Image
+        :param _:           Variables for filling, for alignment with DD-Net
+        :return:
+        '''
+
+        compress_seis = self.pre_seis_conv(inputs)
+
+        down3 = self.down3(compress_seis)
+        down4 = self.down4(down3)
+        down5 = self.down5(down4)
+        center = self.center(down5)
+
+        # 16*18*512
+        decoder1_image = center
+        decoder2_image = center
+
+        #################
+        ###  Decoder1 ###
+        #################
+        dc1_up5 = self.up5(down5, decoder1_image)
+        dc1_up4 = self.up4(down4, dc1_up5)
+        dc1_up3 = self.up3(dc1_up4)
+        dc1_up2 = self.up2(dc1_up3)
+
+
+        #################
+        ###  Decoder2 ###
+        #################
+        dc2_up5 = self.up5(down5, decoder2_image)
+        dc2_up4 = self.up4(down4, dc2_up5)
+        dc2_up3 = self.up3(dc2_up4)
+        dc2_up2 = self.up2(dc2_up3)
+
+
+        return self.dc1_final(dc1_up2), self.dc2_final(dc2_up2)
+
+
+class DDNetDeepOnet(nn.Module):
+    def __init__(self, n_classes=1, in_channels=5, is_deconv=True, is_batchnorm=True,  **kwargs):
+        super(DDNetDeepOnet, self).__init__()
+        self.is_deconv = is_deconv
+        self.in_channels = in_channels
+        self.is_batchnorm = is_batchnorm
+        self.n_classes = n_classes
+
+        self.pre_seis_conv = SeismicRecordDownSampling(self.in_channels)
+
+        # Intrinsic UNet section
+        self.down3 = unetDown(32, 64, self.is_batchnorm)
+        self.down4 = unetDown(64, 128, self.is_batchnorm)
+        self.down5 = unetDown(128, 256, self.is_batchnorm)
+
+        self.center = unetDown(256, 512, self.is_batchnorm)
+
+        self.up5 = unetUp(512, 256, output_lim=[9, 9], is_deconv=self.is_deconv)
+        self.up4 = unetUp(256, 128, output_lim=[18, 18], is_deconv=self.is_deconv)
+        self.up3 = netUp(128, 64, output_lim=[35, 35], is_deconv=self.is_deconv)
+        self.up2 = netUp(64, 32, output_lim=[70, 70], is_deconv=self.is_deconv)
+
+        self.dc1_final = ConvBlock_Tanh(32, self.n_classes)
+
+        # 全连接神经网络
+        self.layer_sizes_t = [5, 128, 256, 256, 512]
+        self.trunk = Smooth_Net(self.layer_sizes_t)
+
+
+
+
+    def forward(self, x, source):
+
+        compress_seis = self.pre_seis_conv(x)
+
+        down3 = self.down3(compress_seis)
+        down4 = self.down4(down3)
+        down5 = self.down5(down4)
+        center = self.center(down5)
+
+        decoder1_image = center     # (None, 512, 5, 5)
+
+        s = self.trunk(source).reshape(-1, 512, 1, 1)   # (None, 512, 1, 1)
+
+        X = decoder1_image * s  # (None, 512, 5, 5)
+
+        #################
+        ###  Decoder1 ###
+        #################
+        dc1_up5 = self.up5(down5, X)
+        dc1_up4 = self.up4(down4, dc1_up5)
+        dc1_up3 = self.up3(dc1_up4)
+        dc1_up2 = self.up2(dc1_up3)
+
+        return self.dc1_final(dc1_up2)
 
 
 
@@ -1176,6 +1495,8 @@ model_dict = {
     'DDeeponet': DDeeponet,
     'DDeeponet2': DDeeponet2,
     'InversionDeepOnet': InversionDeepOnet,
+    'InversionDeepOnet2': InversionDeepOnet2,
+    'DDNetDeepOnet': DDNetDeepOnet,
     'DeepONet': DeepONet
 }
 
