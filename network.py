@@ -21,6 +21,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from math import ceil
 from collections import OrderedDict
+from torchvision import models
 
 NORM_LAYERS = { 'bn': nn.BatchNorm2d, 'in': nn.InstanceNorm2d, 'ln': nn.LayerNorm }
 
@@ -1154,16 +1155,31 @@ class BCEFocalLoss(torch.nn.Module):
             loss = torch.sum(loss)
         return loss
 
+# 感知损失
+class PerceptualLoss(nn.Module):
+    def __init__(self):
+        super(PerceptualLoss, self).__init__()
+        # 加载预训练的VGG模型
+        self.vgg = models.vgg16(pretrained=False).features
+        self.vgg[0] = torch.nn.Conv2d(1, 64, kernel_size=3, padding=1)
+        self.vgg.load_state_dict(torch.load("vgg16-2.pth"))
+
+    def forward(self, input, target):
+
+        input_features = self.vgg(input)
+        target_features = self.vgg(target)
+        return nn.L1Loss()(input_features, target_features)
+
 
 class InversionDeepOnet(nn.Module):
-    def __init__(self, dim1=32, dim2=64, dim3=128, dim4=256, dim5=512, sample_spatial=1.0, **kwargs):
+    def __init__(self, dim1=32, dim2=64, dim3=128, dim4=256, dim5=512, sample_spatial=1.0, layer_sizes_t=[5, 256 ,256, 256, 512], **kwargs):
         super(InversionDeepOnet, self).__init__()
 
         self.branch = InversionNet_Encoder(dim1=dim1, dim2=dim2, dim3=dim3, dim4=dim4, dim5=dim5,
                                             sample_spatial=sample_spatial)
 
         # 全连接神经网络
-        self.layer_sizes_t = [5, 256,256, 256, 512]
+        self.layer_sizes_t = layer_sizes_t
         self.trunk = Smooth_Net(self.layer_sizes_t)
 
         # 不连续神经网络
@@ -1189,19 +1205,19 @@ class InversionDeepOnet(nn.Module):
 
 
 class InversionDeepOnet2(nn.Module):
-    def __init__(self, dim1=32, dim2=64, dim3=128, dim4=256, dim5=512, sample_spatial=1.0, **kwargs):
+    def __init__(self, dim1=32, dim2=64, dim3=128, dim4=256, dim5=512, sample_spatial=1.0, layer_sizes_t=[5, 256,256, 256, 512], **kwargs):
         super(InversionDeepOnet2, self).__init__()
 
         self.branch = InversionNet_Encoder(dim1=dim1, dim2=dim2, dim3=dim3, dim4=dim4, dim5=dim5,
                                             sample_spatial=sample_spatial)
 
         # 全连接神经网络
-        # self.layer_sizes_t = [5, 128, 256, 512]
-        # self.trunk = Smooth_Net(self.layer_sizes_t)
+        self.layer_sizes_t = layer_sizes_t
+        self.trunk = Smooth_Net(self.layer_sizes_t)
 
         # 不连续神经网络
-        self.layer_sizes_t = [5, 128, 32, 32, 256, 512]
-        self.trunk = Trunk_Net_Discon(self.layer_sizes_t, 32)
+        # self.layer_sizes_t = [5, 128, 32, 32, 256, 512]
+        # self.trunk = Trunk_Net_Discon(self.layer_sizes_t, 32)
 
         # 解码器
         self.decoder = InversionNet_Decoder2(dim1=dim1, dim2=dim2, dim3=dim3, dim4=dim4, dim5=dim5,
@@ -1219,9 +1235,6 @@ class InversionDeepOnet2(nn.Module):
         result1, result2 = self.decoder(x_dot)     # (None, 1, 70, 70)
 
         return result1, result2
-
-
-
 
 class SeismicRecordDownSampling(nn.Module):
     '''
@@ -1423,9 +1436,8 @@ class DDNet70Model(nn.Module):
 
         return self.dc1_final(dc1_up2), self.dc2_final(dc2_up2)
 
-
 class DDNetDeepOnet(nn.Module):
-    def __init__(self, n_classes=1, in_channels=5, is_deconv=True, is_batchnorm=True,  **kwargs):
+    def __init__(self, n_classes=1, in_channels=5, is_deconv=True, is_batchnorm=True, layer_sizes_t=[5, 256,256, 256, 512],  **kwargs):
         super(DDNetDeepOnet, self).__init__()
         self.is_deconv = is_deconv
         self.in_channels = in_channels
@@ -1449,7 +1461,7 @@ class DDNetDeepOnet(nn.Module):
         self.dc1_final = ConvBlock_Tanh(32, self.n_classes)
 
         # 全连接神经网络
-        self.layer_sizes_t = [5, 128, 256, 256, 512]
+        self.layer_sizes_t = layer_sizes_t
         self.trunk = Smooth_Net(self.layer_sizes_t)
 
 

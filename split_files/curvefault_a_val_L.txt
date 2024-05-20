@@ -1,4 +1,6 @@
-E:\FWI\FWI-L\DATA\CurveFault_A\data\data60.npy	E:\FWI\FWI-L\DATA\CurveFault_A\source\source60.npy	E:\FWI\FWI-L\DATA\CurveFault_A\model\model60.npy
+E:\FWI\FWI-L\DATA\CurveFault_A\data\data97.npy	E:\FWI\FWI-L\DATA\CurveFault_A\source\source97.npy	E:\FWI\FWI-L\DATA\CurveFault_A\model\model97.npy
+E:\FWI\FWI-L\DATA\CurveFault_A\data\data98.npy	E:\FWI\FWI-L\DATA\CurveFault_A\source\source98.npy	E:\FWI\FWI-L\DATA\CurveFault_A\model\model98.npy
+E:\FWI\FWI-L\DATA\CurveFault_A\data\data99.npy	E:\FWI\FWI-L\DATA\CurveFault_A\source\source99.npy	E:\FWI\FWI-L\DATA\CurveFault_A\model\model99.npy
 E:\FWI\FWI-L\DATA\CurveFault_A\data\data100.npy	E:\FWI\FWI-L\DATA\CurveFault_A\source\source100.npy	E:\FWI\FWI-L\DATA\CurveFault_A\model\model100.npy
 E:\FWI\FWI-L\DATA\CurveFault_A\data\data101.npy	E:\FWI\FWI-L\DATA\CurveFault_A\source\source101.npy	E:\FWI\FWI-L\DATA\CurveFault_A\model\model101.npy
 E:\FWI\FWI-L\DATA\CurveFault_A\data\data102.npy	E:\FWI\FWI-L\DATA\CurveFault_A\source\source102.npy	E:\FWI\FWI-L\DATA\CurveFault_A\model\model102.npy
