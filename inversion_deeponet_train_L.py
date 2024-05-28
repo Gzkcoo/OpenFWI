@@ -297,15 +297,15 @@ def parse_args():
     parser.add_argument('-s', '--suffix', type=str, default=None, help='subfolder name for this run')
 
     # Model related
-    parser.add_argument('--with_source', default=0, type=int, help='data with source or not')
-    parser.add_argument('-m', '--model', default='InversionNet', type=str, help='inverse model name')
+    parser.add_argument('--with_source', default=1, type=int, help='data with source or not')
+    parser.add_argument('-m', '--model', default='FourierDeeponet', type=str, help='inverse model name')
     parser.add_argument('-um', '--up-mode', default=None,
                         help='upsampling layer mode such as "nearest", "bicubic", etc.')
     parser.add_argument('-ss', '--sample-spatial', type=float, default=1.0, help='spatial sampling ratio')
     parser.add_argument('-st', '--sample-temporal', type=int, default=1, help='temporal sampling ratio')
     parser.add_argument('--layer_sizes', type=int, default=[5, 256, 256, 256, 512], help='trunk_net layer sizes')
     # Training related
-    parser.add_argument('-b', '--batch-size', default=64, type=int)
+    parser.add_argument('-b', '--batch-size', default=32, type=int)
     parser.add_argument('--lr', default=0.001, type=float, help='initial learning rate')
     parser.add_argument('-lm', '--lr-milestones', nargs='+', default=[60], type=int, help='decrease lr on milestones')
     parser.add_argument('--momentum', default=0.9, type=float, help='momentum')

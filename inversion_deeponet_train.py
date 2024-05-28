@@ -19,7 +19,7 @@ import network
 import datetime
 from torch.utils.data import RandomSampler, DataLoader
 from torchvision.transforms import Compose
-from dataset import MyDataset
+from dataset import LDataset
 import matplotlib.pyplot as plt
 
 
@@ -153,7 +153,7 @@ def train(args):
 
     print('Loading training data')
     # Normalize data and label to [-1, 1]
-    dataset_train = MyDataset(
+    dataset_train = LDataset(
         args.train_anno,
         preload=True,
         sample_ratio=1,
@@ -166,7 +166,7 @@ def train(args):
 
     print('Loading validation data')
     # Normalize data and label to [-1, 1]
-    dataset_valid = MyDataset(
+    dataset_valid = LDataset(
         args.val_anno,
         preload=True,
         sample_ratio=1,
@@ -200,6 +200,7 @@ def train(args):
     # Define loss function
     l1loss = nn.L1Loss()  # MAE
     l2loss = nn.MSELoss()  # MSE
+    perceptualloss = network.PerceptualLoss().to(args.device)
 
     # l3loss = network.BCEFocalLoss()  # 交叉熵
 
@@ -207,7 +208,7 @@ def train(args):
     def criterion(pred, gt):
         loss_g1v = l1loss(pred, gt)
         loss_g2v = l2loss(pred, gt)
-        loss_perceptual = network.PerceptualLoss().to(args.device)(pred, gt)
+        loss_perceptual = perceptualloss(pred, gt)
 
         loss = args.lambda_g1v * loss_g1v + args.lambda_g2v * loss_g2v + args.lambda_perceptual * loss_perceptual
         return loss, loss_g1v, loss_g2v, loss_perceptual

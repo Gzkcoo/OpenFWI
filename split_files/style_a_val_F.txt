@@ -1,0 +1,9 @@
+E:\FWI\FWI-F\DATA\Style_A\data\data1121.npy	E:\FWI\FWI-F\DATA\Style_A\source\source121.npy	E:\FWI\FWI-F\DATA\Style_A\model\model121.npy
+E:\FWI\FWI-F\DATA\Style_A\data\data1122.npy	E:\FWI\FWI-F\DATA\Style_A\source\source122.npy	E:\FWI\FWI-F\DATA\Style_A\model\model122.npy
+E:\FWI\FWI-F\DATA\Style_A\data\data1123.npy	E:\FWI\FWI-F\DATA\Style_A\source\source123.npy	E:\FWI\FWI-F\DATA\Style_A\model\model123.npy
+E:\FWI\FWI-F\DATA\Style_A\data\data1124.npy	E:\FWI\FWI-F\DATA\Style_A\source\source124.npy	E:\FWI\FWI-F\DATA\Style_A\model\model124.npy
+E:\FWI\FWI-F\DATA\Style_A\data\data1125.npy	E:\FWI\FWI-F\DATA\Style_A\source\source125.npy	E:\FWI\FWI-F\DATA\Style_A\model\model125.npy
+E:\FWI\FWI-F\DATA\Style_A\data\data1126.npy	E:\FWI\FWI-F\DATA\Style_A\source\source126.npy	E:\FWI\FWI-F\DATA\Style_A\model\model126.npy
+E:\FWI\FWI-F\DATA\Style_A\data\data1127.npy	E:\FWI\FWI-F\DATA\Style_A\source\source127.npy	E:\FWI\FWI-F\DATA\Style_A\model\model127.npy
+E:\FWI\FWI-F\DATA\Style_A\data\data1128.npy	E:\FWI\FWI-F\DATA\Style_A\source\source128.npy	E:\FWI\FWI-F\DATA\Style_A\model\model128.npy
+E:\FWI\FWI-F\DATA\Style_A\data\data1129.npy	E:\FWI\FWI-F\DATA\Style_A\source\source129.npy	E:\FWI\FWI-F\DATA\Style_A\model\model129.npy

@@ -1,0 +1,4 @@
+E:\FWI\FWI-FL\DATA\FlatVel_B\data\data1.npy	E:\FWI\FWI-FL\DATA\FlatVel_B\source\source1.npy	E:\FWI\FWI-FL\DATA\FlatVel_B\model\model1.npy
+E:\FWI\FWI-FL\DATA\FlatVel_B\data\data2.npy	E:\FWI\FWI-FL\DATA\FlatVel_B\source\source2.npy	E:\FWI\FWI-FL\DATA\FlatVel_B\model\model2.npy
+E:\FWI\FWI-FL\DATA\FlatVel_B\data\data3.npy	E:\FWI\FWI-FL\DATA\FlatVel_B\source\source3.npy	E:\FWI\FWI-FL\DATA\FlatVel_B\model\model3.npy
+E:\FWI\FWI-FL\DATA\FlatVel_B\data\data4.npy	E:\FWI\FWI-FL\DATA\FlatVel_B\source\source4.npy	E:\FWI\FWI-FL\DATA\FlatVel_B\model\model4.npy

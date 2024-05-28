@@ -2,45 +2,24 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-data  = np.load(r'E:\FWI\FWI-FL\DATA\CurveVel_A\frequency\frequency60.npy')
-print(np.min(data))
-print(np.max(data))
+# data  = np.load(r'E:\FWI\FWI-FL\DATA\CurveVel_A\frequency\frequency60.npy')
+# print(np.min(data))
+# print(np.max(data))
 
-# 测试data中最大值最小值
-# min = 0
-# max = 0
-# for i in range(1, 61):
-#     data  = np.load('E:\FWI\FWI-FL\DATA\Style_A\data\data{}.npy'.format(i))
-#     print('max:{} min:{}'.format(np.max(data), np.min(data)))
-#     min = min if min < np.min(data) else np.min(data)
-#     max = max if max > np.max(data) else np.max(data)
-# print('Finnal max:{} min:{}'.format(max, min))
+# ----------------------------------------------------------------------------
 
-# loss可视化
-# 绘制loss曲线图
-# x = np.arange(1, 121)
-# plt.figure(1)
-# ax11 = plt.subplot(1, 2, 1)
-# ax11.semilogy(x, np.log10(x), label='train')
-# ax11.semilogy(x, 0.1 * np.log10(x), label='test')
-# ax11.set_xlabel('Epochs')
-# ax11.set_ylabel('Loss')
-# ax11.set_title('MAELoss')
-# ax11.legend()
-#
-# ax12 = plt.subplot(1, 2, 2)
-# ax12.plot(x, np.log10(x), label='train')
-# ax12.plot(x, np.log10(x), label='test')
-# ax12.set_yscale('log')
-# ax12.set_xlabel('Epochs')
-# ax12.set_ylabel('Loss')
-# ax12.set_title('MAELoss')
-# ax12.legend()
-#
-# plt.show()
+#测试data中最大值最小值
+min = 0
+max = 0
+for i in range(1, 135):
+    data  = np.load('E:\FWI\FWI-F\DATA\Style_A\data\data{}.npy'.format(i))
+    print('max:{} min:{}'.format(np.max(data), np.min(data)))
+    min = min if min < np.min(data) else np.min(data)
+    max = max if max > np.max(data) else np.max(data)
+print('Finnal max:{} min:{}'.format(max, min))
 
 
-
+# ---------------------------------------------------------------------------
 
 # import torch
 # import torch.nn.functional as F
@@ -89,3 +68,64 @@ print(np.max(data))
 # vgg2 = models.vgg16(pretrained=True).features
 # vgg2[0] = torch.nn.Conv2d(1, 64, kernel_size=3, padding=1)
 # print(vgg2(model))
+
+# --------------------------------------------------------------------------
+# 数据集随机分割
+
+# import torch
+# from torch.utils.data import random_split
+# dataset = range(10)
+# train_dataset, test_dataset = random_split(
+#     dataset=dataset,
+#     lengths=[7, 3],
+#     generator=torch.Generator().manual_seed(0)
+# )
+# print(list(train_dataset))
+# print(list(test_dataset))
+
+# -------------------------------------------------------------------
+# import torch
+# import torch.nn.functional as F
+#
+#
+# class model(torch.nn.Module):
+#     def __init__(self):
+#         super(model, self).__init__()
+#         self.linear = torch.nn.Linear(3,3)
+#
+#     def forward(self, x):
+#         return self.linear(x)
+#
+# class model2(torch.nn.Module):
+#     def __init__(self):
+#         super(model2, self).__init__()
+#         self.linear = torch.nn.Linear(3,3)
+#
+#     def forward(self, x):
+#         return self.linear(x)
+#
+# class model3(torch.nn.Module):
+#     def __init__(self):
+#         super(model3, self).__init__()
+#         self.linear = model2()
+#
+#     def forward(self, x):
+#         return self.linear(x)
+#
+#
+# x = torch.rand(2, 3)
+# y = torch.rand(2, 3)
+# model11 = model()
+# model22 = model2()
+# model33 = model3()
+# l1Loss = torch.nn.L1Loss()
+# lr = 0.001
+# optimizer = torch.optim.AdamW(model11.parameters(), lr= lr)
+# for i in range(10):
+#     model11.train()
+#     optimizer.zero_grad()
+#     output = model11(x)
+#     loss = l1Loss(output, y) + l1Loss(model33(output), y)
+#     loss.backward()
+#     optimizer.step()
+#     print(model22.parameters())

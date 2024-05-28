@@ -16,6 +16,23 @@
         "sz": 10,
         "gz": 10
     },
+    "flatvel-a-F": {
+        "data_min": -33.34,
+        "data_max": 66.99,
+        "label_min": 1500,
+        "label_max": 4500,
+        "file_size": 500,
+        "nbc": 120,
+        "dx": 10,
+        "nt": 1000,
+        "dt": 1e-3,
+        "f": 15,
+        "n_grid": 70,
+        "ns": 5,
+        "ng": 70,
+        "sz": 10,
+        "gz": 10
+    },
     "flatvel-a-FL": {
         "data_min": -33.49,
         "data_max": 67.46,
@@ -67,6 +84,23 @@
         "sz": 10,
         "gz": 10
     },
+    "curvevel-a-F": {
+        "data_min": -33.72,
+        "data_max": 68.34,
+        "label_min": 1500,
+        "label_max": 4500,
+        "file_size": 500,
+        "nbc": 120,
+        "dx": 10,
+        "nt": 1000,
+        "dt": 1e-3,
+        "f": 15,
+        "n_grid": 70,
+        "ns": 5,
+        "ng": 70,
+        "sz": 10,
+        "gz": 10
+    },
     "curvevel-a-FL": {
         "data_min": -33.25,
         "data_max": 66.93,
@@ -104,6 +138,23 @@
     "flatvel-b-L": {
         "data_min": -27.17,
         "data_max": 56.05,
+        "label_min": 1500,
+        "label_max": 4500,
+        "file_size": 500,
+        "nbc": 120,
+        "dx": 10,
+        "nt": 1000,
+        "dt": 1e-3,
+        "f": 15,
+        "n_grid": 70,
+        "ns": 5,
+        "ng": 70,
+        "sz": 10,
+        "gz": 10
+    },
+    "flatvel-b-F": {
+        "data_min": -34.41,
+        "data_max": 72.04,
         "label_min": 1500,
         "label_max": 4500,
         "file_size": 500,
@@ -203,6 +254,23 @@
         "sz": 10,
         "gz": 10
     },
+    "curvefault-a-F": {
+        "data_min": -32.78,
+        "data_max": 66.68,
+        "label_min": 1500,
+        "label_max": 4500,
+        "file_size": 500,
+        "nbc": 120,
+        "dx": 10,
+        "nt": 1000,
+        "dt": 1e-3,
+        "f": 15,
+        "n_grid": 70,
+        "ns": 5,
+        "ng": 70,
+        "sz": 10,
+        "gz": 10
+    },
     "curvefault-a-FL": {
         "data_min": -32.77,
         "data_max": 66.18,
@@ -288,8 +356,25 @@
         "sz": 10,
         "gz": 10
     },
+    "style-a-F": {
+        "data_min": -31.25,
+        "data_max": 63.37,
+        "label_min": 1500,
+        "label_max": 4500,
+        "file_size": 500,
+        "nbc": 120,
+        "dx": 10,
+        "nt": 1000,
+        "dt": 1e-3,
+        "f": 15,
+        "n_grid": 70,
+        "ns": 5,
+        "ng": 70,
+        "sz": 10,
+        "gz": 10
+    },
     "style-a-FL": {
-        "data_min": -31.35,
+        "data_min": -31.49,
         "data_max": 64.45,
         "label_min": 1500,
         "label_max": 4500,

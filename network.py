@@ -22,6 +22,10 @@ import torch.nn.functional as F
 from math import ceil
 from collections import OrderedDict
 from torchvision import models
+import fno_model
+import operator
+from functools import reduce
+from functools import partial
 
 NORM_LAYERS = { 'bn': nn.BatchNorm2d, 'in': nn.InstanceNorm2d, 'ln': nn.LayerNorm }
 
@@ -1163,6 +1167,8 @@ class PerceptualLoss(nn.Module):
         self.vgg = models.vgg16(pretrained=False).features
         self.vgg[0] = torch.nn.Conv2d(1, 64, kernel_size=3, padding=1)
         self.vgg.load_state_dict(torch.load("vgg16-2.pth"))
+        self.vgg.eval()
+        self.vgg.requires_grad_(False)
 
     def forward(self, input, target):
 
@@ -1494,6 +1500,50 @@ class DDNetDeepOnet(nn.Module):
 
 
 
+# Fourier-deeponet
+class FourierDeeponet(nn.Module):
+    def __init__(self, **kwargs):
+        super(FourierDeeponet, self).__init__()
+        # 全连接神经网络
+        # two linear transformations to increase the number of channels to C = 64
+        self.layer_sizes_b = [5, 32, 64]
+        self.branch = Smooth_Net(self.layer_sizes_b)
+
+        self.layer_sizes_t = [5, 32, 64]
+        self.trunk = Smooth_Net(self.layer_sizes_t)
+        self.FNO_Decoder = fno_model.UFNO2d(modes1=16, modes2=16, width=64)
+
+
+    def forward(self, data, source):
+
+        data = F.pad(data, [1, 1])  # (None, 5 ,1000, 72)
+        # data = F.interpolate(data, size=(1000, 72), mode='bilinear', align_corners=False)  # (None, 5 ,1000, 72)
+        data = data.permute(0, 2, 3, 1)  # (None, 1000, 72, 5)
+
+        b = self.branch(data)  # (None, 1000, 72, 64)
+        t = self.trunk(source).reshape(-1, 1, 1, 64)  # (None, 1,1, 64)
+        t = t.repeat(1, 1000, 72, 1)
+
+
+        out = b * t  # (None, 1000, 72, 64)
+
+
+        out = self.FNO_Decoder(out)
+
+        return out
+
+    def count_params(self):
+        c = 0
+        for p in self.parameters():
+            c += reduce(operator.mul, list(p.size()))
+
+        return c
+
+
+
+
+
+
 
 
 model_dict = {
@@ -1509,6 +1559,7 @@ model_dict = {
     'InversionDeepOnet': InversionDeepOnet,
     'InversionDeepOnet2': InversionDeepOnet2,
     'DDNetDeepOnet': DDNetDeepOnet,
+    'FourierDeeponet': FourierDeeponet,
     'DeepONet': DeepONet
 }
 
