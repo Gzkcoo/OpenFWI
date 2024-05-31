@@ -2,22 +2,22 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-# data  = np.load(r'E:\FWI\FWI-FL\DATA\CurveVel_A\frequency\frequency60.npy')
-# print(np.min(data))
-# print(np.max(data))
+data  = np.load(r'E:\FWI\FWI-FL\DATA\Style_A\source\source60.npy')
+print(np.min(data))
+print(np.max(data))
 
 # ----------------------------------------------------------------------------
-
-#测试data中最大值最小值
-min = 0
-max = 0
-for i in range(1, 135):
-    data  = np.load('E:\FWI\FWI-F\DATA\Style_A\data\data{}.npy'.format(i))
-    print('max:{} min:{}'.format(np.max(data), np.min(data)))
-    min = min if min < np.min(data) else np.min(data)
-    max = max if max > np.max(data) else np.max(data)
-print('Finnal max:{} min:{}'.format(max, min))
-
+#
+# #测试data中最大值最小值
+# min = 0
+# max = 0
+# for i in range(1, 135):
+#     data  = np.load('E:\FWI\FWI-F\DATA\Style_A\data\data{}.npy'.format(i))
+#     print('max:{} min:{}'.format(np.max(data), np.min(data)))
+#     min = min if min < np.min(data) else np.min(data)
+#     max = max if max > np.max(data) else np.max(data)
+# print('Finnal max:{} min:{}'.format(max, min))
+#
 
 # ---------------------------------------------------------------------------
 
@@ -129,3 +129,4 @@ print('Finnal max:{} min:{}'.format(max, min))
 #     loss.backward()
 #     optimizer.step()
 #     print(model22.parameters())
+

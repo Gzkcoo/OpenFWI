@@ -1527,8 +1527,14 @@ class FourierDeeponet(nn.Module):
 
         out = b * t  # (None, 1000, 72, 64)
 
+        print("start")
+        print(torch.cuda.memory_allocated())
+
 
         out = self.FNO_Decoder(out)
+
+        print("end")
+        print(torch.cuda.memory_allocated())
 
         return out
 
