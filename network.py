@@ -465,8 +465,9 @@ class FWIDeeponet(nn.Module):
         self.xy_coordinate = self.xy_coordinate / length  # 输入转换为（0，1）之间
         self.xy_coordinate = self.xy_coordinate.to('cuda')
 
-        layer_sizes = [2, 256, 256, 256, 64, 64, 256, 512]
-        self.trunk = Trunk_Net_Discon(layer_sizes, 64)    # 不连续神经网络
+        # layer_sizes = [2, 256, 256, 256, 64, 64, 256, 512]
+        # self.trunk = Trunk_Net_Discon(layer_sizes, 64)    # 不连续神经网络
+
 
         # layer_sizes = [2, 256, 256, 512, 512]
         # bias_sizes = [512, 512, 512]
@@ -1443,7 +1444,7 @@ class DDNet70Model(nn.Module):
         return self.dc1_final(dc1_up2), self.dc2_final(dc2_up2)
 
 class DDNetDeepOnet(nn.Module):
-    def __init__(self, n_classes=1, in_channels=5, is_deconv=True, is_batchnorm=True, layer_sizes_t=[5, 256,256, 256, 512],  **kwargs):
+    def __init__(self, n_classes=1, in_channels=5, is_deconv=True, is_batchnorm=True, layer_sizes_t=[5, 256, 256, 512],  **kwargs):
         super(DDNetDeepOnet, self).__init__()
         self.is_deconv = is_deconv
         self.in_channels = in_channels
@@ -1509,7 +1510,7 @@ class FourierDeeponet(nn.Module):
         self.layer_sizes_b = [5, 32, 64]
         self.branch = Smooth_Net(self.layer_sizes_b)
 
-        self.layer_sizes_t = [5, 32, 64]
+        self.layer_sizes_t = [10, 32, 64]
         self.trunk = Smooth_Net(self.layer_sizes_t)
         self.FNO_Decoder = fno_model.UFNO2d(modes1=16, modes2=16, width=64)
 
