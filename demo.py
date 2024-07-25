@@ -1,10 +1,142 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import torch
+import matplotlib.colors as mcolors
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+from scipy.ndimage import uniform_filter
+from torch.autograd import Variable
+
+import cv2
+import numpy as np
+import torch
+import torch.nn as nn
+import math
+import scipy.io
+import scipy
+
+font18 = {
+    'family': 'Times New Roman',
+    'weight': 'normal',
+    'size': 18,
+}
+font21 = {
+    'family': 'Times New Roman',
+    'weight': 'normal',
+    'size': 21,
+}
+
+def pain_openfwi_seismic_data(para_seismic_data,  path, is_colorbar = 0):
+    '''
+    Plotting seismic data images of openfwi dataset
+
+    :param para_seismic_data:   Seismic data (1000 x 70) (numpy)
+    :param is_colorbar:         Whether to add a color bar (1 means add, 0 is the default, means don't add)
+    '''
+
+    # The size of 1000 x 70 is not easy to display, we compressed it to a similar size of 400 x 301 as the SEG dataset.
+    data = cv2.resize(para_seismic_data, dsize=(400, 301), interpolation=cv2.INTER_CUBIC)   #
+
+    if is_colorbar == 0:
+        fig, ax = plt.subplots(figsize=(6.5, 8), dpi = 120)
+    else:
+        fig, ax = plt.subplots(figsize=(6.1, 8), dpi = 120)
+
+    im = ax.imshow(data, extent=[0, 0.7, 1.0, 0], cmap=plt.cm.seismic, vmin=-18, vmax=19)
+    ax.set_xlabel('Position (km)', font21)
+    ax.set_ylabel('Time (s)', font21)
+    #plt.xticks([])
+    #plt.yticks([])
+
+    #ax.set_xticks([])
+    #ax.set_yticks([])
+
+    if is_colorbar == 0:
+        plt.subplots_adjust(bottom=0.11, top=0.95, left=0.11, right=0.99)
+    else:
+        plt.rcParams['font.size'] = 14      # Set colorbar font size
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes("top", size="3%", pad=0.3)
+        plt.colorbar(im, ax=ax, cax=cax, orientation='horizontal')
+
+        plt.subplots_adjust(bottom=0.08, top=0.98, left=0.11, right=0.99)
+    plt.savefig(path)
+    plt.show()
 
 
-data  = np.load(r'E:\FWI\FWI-FL\DATA\FlatVel_B\frequency\frequency49.npy')
-print(np.min(data))
-print(np.max(data))
+
+def plot_single_seismic(data, path):
+    colors = [(0, 0, 1),  # Red
+              (1, 1, 1),  # White
+              (1, 0, 0)]  # Blue
+
+    # Create the custom colormap
+    cmap = mcolors.LinearSegmentedColormap.from_list('red_white_blue', colors)
+
+    nz, nx = data.shape
+    plt.rcParams.update({'font.size': 18})
+    vmin, vmax = np.min(data), np.max(data)
+    fig, ax = plt.subplots(1, 1, figsize=(8, 6))
+    im = ax.matshow(data, aspect='auto', cmap=cmap, vmin=vmin * 0.01, vmax=vmax * 0.01)
+    ax.set_aspect(aspect=nx/nz)
+    plt.xticks([])
+    plt.yticks([])
+
+    ax.set_xticks([])
+    ax.set_yticks([])
+    #ax.set_xticks(range(0, nx, int(300//(1050/nx)))[:5])
+    #ax.set_xticklabels(range(0, 1050, 300))
+    #ax.set_title('Offset (m)', y=1.08)
+    #ax.set_yticks(range(0, nz, int(200//(1000/nz)))[:5])
+    #ax.set_yticklabels(range(0, 1000, 200))
+    #ax.set_ylabel('Time (ms)', fontsize=18)
+    #fig.colorbar(im, ax=ax, shrink=1.0, pad=0.01, label='Amplitude')
+    plt.savefig(path)
+    plt.close('all')
+
+
+
+
+data  = np.load(r'E:\FWI\FWI-F\DATA\CurveVel_A\data\data1.npy')[0]
+
+
+
+for i in range(5):
+    pain_openfwi_seismic_data(data[i], f'.\sesimic_{i}.png')
+
+
+
+#-------------------------------------------------------------------------------
+# 创建二维矩阵
+# matrix = np.full((500, 5), 15.0, dtype=np.float32)  # n 表示矩阵的行数
+# for i in range(108):
+#     # 保存为.npy文件
+#     np.save(f'model{i+1}.npy', matrix)
+#
+
+
+
+# ----------------------------------------------------------------------------
+#
+
+# def l2_relative_loss(input, target):
+#     diff = input - target
+#     l2_norm_diff = torch.norm(diff, p=2, dim=(1, 2, 3))
+#     l2_norm_target = torch.norm(target, p=2, dim=(1, 2, 3))
+#     loss = l2_norm_diff / l2_norm_target
+#     return loss
+#
+# # 创建输入张量和目标张量
+# input = torch.randn(2, 3, 3, 4)
+# target = torch.randn(2, 3, 3, 4)
+#
+# # 计算L2相对损失
+# loss = l2_relative_loss(input, target)
+#
+# print(loss)
+
+# data  = np.load(r'E:\FWI\FWI-F\DATA\FlatVel_B\source\source9.npy')
+# print(np.min(data))
+# print(np.max(data))
 
 # ----------------------------------------------------------------------------
 #

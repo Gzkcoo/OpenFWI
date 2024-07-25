@@ -1,2 +1,7 @@
-E:\FWI\FWI-F\DATA\FlatVel_B\data\data51.npy	E:\FWI\FWI-F\DATA\FlatVel_B\source\source51.npy	E:\FWI\FWI-F\DATA\FlatVel_B\model\model51.npy
-E:\FWI\FWI-F\DATA\FlatVel_B\data\data52.npy	E:\FWI\FWI-F\DATA\FlatVel_B\source\source52.npy	E:\FWI\FWI-F\DATA\FlatVel_B\model\model52.npy
+E:\FWI\FWI-F\DATA\FlatVel_B\data\data49.npy	E:\FWI\FWI-F\DATA\FlatVel_B\frequency\frequency49.npy	E:\FWI\FWI-F\DATA\FlatVel_B\model\model49.npy
+E:\FWI\FWI-F\DATA\FlatVel_B\data\data50.npy	E:\FWI\FWI-F\DATA\FlatVel_B\frequency\frequency50.npy	E:\FWI\FWI-F\DATA\FlatVel_B\model\model50.npy
+E:\FWI\FWI-F\DATA\FlatVel_B\data\data51.npy	E:\FWI\FWI-F\DATA\FlatVel_B\frequency\frequency51.npy	E:\FWI\FWI-F\DATA\FlatVel_B\model\model51.npy
+E:\FWI\FWI-F\DATA\FlatVel_B\data\data52.npy	E:\FWI\FWI-F\DATA\FlatVel_B\frequency\frequency52.npy	E:\FWI\FWI-F\DATA\FlatVel_B\model\model52.npy
+E:\FWI\FWI-F\DATA\FlatVel_B\data\data53.npy	E:\FWI\FWI-F\DATA\FlatVel_B\frequency\frequency53.npy	E:\FWI\FWI-F\DATA\FlatVel_B\model\model53.npy
+E:\FWI\FWI-F\DATA\FlatVel_B\data\data54.npy	E:\FWI\FWI-F\DATA\FlatVel_B\frequency\frequency54.npy	E:\FWI\FWI-F\DATA\FlatVel_B\model\model54.npy
+E:\FWI\FWI-F\DATA\FlatVel_B\data\data55.npy	E:\FWI\FWI-F\DATA\FlatVel_B\frequency\frequency55.npy	E:\FWI\FWI-F\DATA\FlatVel_B\model\model55.npy

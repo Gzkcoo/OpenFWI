@@ -1,0 +1,4 @@
+E:\FWI\FWI-F\DATA\FlatFault_B\data\data17.npy	E:\FWI\FWI-F\DATA\FlatFault_B\frequency\frequency17.npy	E:\FWI\FWI-F\DATA\FlatFault_B\source\source17.npy	E:\FWI\FWI-F\DATA\FlatFault_B\model\model17.npy
+E:\FWI\FWI-F\DATA\FlatFault_B\data\data18.npy	E:\FWI\FWI-F\DATA\FlatFault_B\frequency\frequency18.npy	E:\FWI\FWI-F\DATA\FlatFault_B\source\source18.npy	E:\FWI\FWI-F\DATA\FlatFault_B\model\model18.npy
+E:\FWI\FWI-F\DATA\FlatFault_B\data\data19.npy	E:\FWI\FWI-F\DATA\FlatFault_B\frequency\frequency19.npy	E:\FWI\FWI-F\DATA\FlatFault_B\source\source19.npy	E:\FWI\FWI-F\DATA\FlatFault_B\model\model19.npy
+E:\FWI\FWI-F\DATA\FlatFault_B\data\data20.npy	E:\FWI\FWI-F\DATA\FlatFault_B\frequency\frequency20.npy	E:\FWI\FWI-F\DATA\FlatFault_B\source\source20.npy	E:\FWI\FWI-F\DATA\FlatFault_B\model\model20.npy

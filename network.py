@@ -23,9 +23,6 @@ from math import ceil
 from collections import OrderedDict
 from torchvision import models
 import fno_model
-import operator
-from functools import reduce
-from functools import partial
 
 NORM_LAYERS = { 'bn': nn.BatchNorm2d, 'in': nn.InstanceNorm2d, 'ln': nn.LayerNorm }
 
@@ -433,7 +430,7 @@ class Trunk_Net_Discon(nn.Module):
 
 
 class FWIDeeponet(nn.Module):
-    def __init__(self, dim1=32, dim2=64, dim3=128, dim4=256, dim5=512, deepth=70, length=70, sample_spatial=1.0, **kwargs):
+    def __init__(self, dim1=32, dim2=64, dim3=128, dim4=256, dim5=512, deepth=70, length=70, sample_spatial=1.0, layer_sizes_t=[2, 256,256, 256, 512], **kwargs):
         super(FWIDeeponet, self).__init__()
         self.convblock1 = ConvBlock(5, dim1, kernel_size=(7, 1), stride=(2, 1), padding=(3, 0))
         self.convblock2_1 = ConvBlock(dim1, dim2, kernel_size=(3, 1), stride=(2, 1), padding=(1, 0))
@@ -461,13 +458,15 @@ class FWIDeeponet(nn.Module):
         xm, ym = torch.meshgrid(xc, yc)
         x = xm.reshape(-1, 1)
         y = ym.reshape(-1, 1)
-        self.xy_coordinate = torch.torch.cat([y, x], dim=1).float()  # (4900, 2)
+        self.xy_coordinate = torch.torch.cat([x, y], dim=1).float()  # (4900, 2)
         self.xy_coordinate = self.xy_coordinate / length  # 输入转换为（0，1）之间
         self.xy_coordinate = self.xy_coordinate.to('cuda')
 
+        self.layer_sizes_t = [2, 256,256, 256, 512]
+        self.trunk = Smooth_Net(self.layer_sizes_t)
+
         # layer_sizes = [2, 256, 256, 256, 64, 64, 256, 512]
         # self.trunk = Trunk_Net_Discon(layer_sizes, 64)    # 不连续神经网络
-
 
         # layer_sizes = [2, 256, 256, 512, 512]
         # bias_sizes = [512, 512, 512]
@@ -521,7 +520,7 @@ class FWIDeeponet(nn.Module):
         x = x.unsqueeze(-1) + self.b
         x = x.reshape((-1, 1, self.deepth, self.length))  # (None, 1, 70, 70)
         # 图像转置
-        x = torch.transpose(x, 2, 3)
+        # x = torch.transpose(x, 2, 3)
         return x
 
 
@@ -1444,7 +1443,7 @@ class DDNet70Model(nn.Module):
         return self.dc1_final(dc1_up2), self.dc2_final(dc2_up2)
 
 class DDNetDeepOnet(nn.Module):
-    def __init__(self, n_classes=1, in_channels=5, is_deconv=True, is_batchnorm=True, layer_sizes_t=[5, 256, 256, 512],  **kwargs):
+    def __init__(self, n_classes=1, in_channels=5, is_deconv=True, is_batchnorm=True, layer_sizes_t=[5, 256,256, 256, 512],  **kwargs):
         super(DDNetDeepOnet, self).__init__()
         self.is_deconv = is_deconv
         self.in_channels = in_channels
@@ -1510,7 +1509,7 @@ class FourierDeeponet(nn.Module):
         self.layer_sizes_b = [5, 32, 64]
         self.branch = Smooth_Net(self.layer_sizes_b)
 
-        self.layer_sizes_t = [10, 32, 64]
+        self.layer_sizes_t = [5, 32, 64]
         self.trunk = Smooth_Net(self.layer_sizes_t)
         self.FNO_Decoder = fno_model.UFNO2d(modes1=16, modes2=16, width=64)
 
@@ -1522,29 +1521,15 @@ class FourierDeeponet(nn.Module):
         data = data.permute(0, 2, 3, 1)  # (None, 1000, 72, 5)
 
         b = self.branch(data)  # (None, 1000, 72, 64)
-        t = self.trunk(source).reshape(-1, 1, 1, 64)  # (None, 1,1, 64)
+        t = self.trunk(source).reshape(-1, 1, 1, 64)  # (None, 64)
         t = t.repeat(1, 1000, 72, 1)
 
-
         out = b * t  # (None, 1000, 72, 64)
-
-        print("start")
-        print(torch.cuda.memory_allocated())
 
 
         out = self.FNO_Decoder(out)
 
-        print("end")
-        print(torch.cuda.memory_allocated())
-
         return out
-
-    def count_params(self):
-        c = 0
-        for p in self.parameters():
-            c += reduce(operator.mul, list(p.size()))
-
-        return c
 
 
 

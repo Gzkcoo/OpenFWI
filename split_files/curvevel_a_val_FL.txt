@@ -1,3 +1,5 @@
+E:\FWI\FWI-FL\DATA\CurveVel_A\data\data49.npy	E:\FWI\FWI-FL\DATA\CurveVel_A\frequency\frequency49.npy	E:\FWI\FWI-FL\DATA\CurveVel_A\source\source49.npy	E:\FWI\FWI-FL\DATA\CurveVel_A\model\model49.npy
+E:\FWI\FWI-FL\DATA\CurveVel_A\data\data50.npy	E:\FWI\FWI-FL\DATA\CurveVel_A\frequency\frequency50.npy	E:\FWI\FWI-FL\DATA\CurveVel_A\source\source50.npy	E:\FWI\FWI-FL\DATA\CurveVel_A\model\model50.npy
 E:\FWI\FWI-FL\DATA\CurveVel_A\data\data51.npy	E:\FWI\FWI-FL\DATA\CurveVel_A\frequency\frequency51.npy	E:\FWI\FWI-FL\DATA\CurveVel_A\source\source51.npy	E:\FWI\FWI-FL\DATA\CurveVel_A\model\model51.npy
 E:\FWI\FWI-FL\DATA\CurveVel_A\data\data52.npy	E:\FWI\FWI-FL\DATA\CurveVel_A\frequency\frequency52.npy	E:\FWI\FWI-FL\DATA\CurveVel_A\source\source52.npy	E:\FWI\FWI-FL\DATA\CurveVel_A\model\model52.npy
 E:\FWI\FWI-FL\DATA\CurveVel_A\data\data53.npy	E:\FWI\FWI-FL\DATA\CurveVel_A\frequency\frequency53.npy	E:\FWI\FWI-FL\DATA\CurveVel_A\source\source53.npy	E:\FWI\FWI-FL\DATA\CurveVel_A\model\model53.npy
